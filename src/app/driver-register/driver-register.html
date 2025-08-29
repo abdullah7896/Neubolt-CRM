@@ -1,0 +1,131 @@
+<div class="container mt-5">
+  <h2 class="fw-bold">Admin Panel – Track Registered EV Data</h2>
+
+  <div class="card mt-4 p-4 shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0">Registered EV Data</h4>
+      <button class="btn button" data-bs-toggle="modal" data-bs-target="#registerDriverModal">
+        + Register Driver
+      </button>
+    </div>
+
+    <!-- Table -->
+    <table class="table table-bordered table-hover text-center align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Driver-ID</th>
+          <th>Driver Name</th>
+          <th>Contact No</th>
+          <th>Allocated Ev Id</th>
+          <th>CNIC</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let ev of paginatedData">
+          <td>{{ ev.evId || ev.driver_id }}</td>
+          <td>{{ ev.name }}</td>
+          <td>{{ ev.contact_number }}</td>
+          <td>{{ ev.allocated_rikshaw }}</td>
+          <td>{{ ev.cnic_number }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <nav aria-label="Page navigation" class="mt-3">
+      <ul class="pagination justify-content-center">
+        <li class="page-item" [class.disabled]="currentPage === 1">
+          <a class="page-link" (click)="setPage(currentPage - 1)">Previous</a>
+        </li>
+        <li class="page-item" 
+            *ngFor="let page of [].constructor(totalPages); let i = index" 
+            [class.active]="currentPage === (i + 1)">
+          <a class="page-link" (click)="setPage(i + 1)">{{ i + 1 }}</a>
+        </li>
+        <li class="page-item" [class.disabled]="currentPage === totalPages">
+          <a class="page-link" (click)="setPage(currentPage + 1)">Next</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="registerDriverModal" tabindex="-1" aria-labelledby="registerDriverLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content p-3">
+      <div class="modal-header">
+        <h5 class="modal-title" id="registerDriverLabel">Register Driver</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form [formGroup]="driverForm" (ngSubmit)="onSubmit()">
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <input type="text" class="form-control" formControlName="name" placeholder="Full Name" />
+            </div>
+            <div class="col-md-6">
+              <input type="text" class="form-control" formControlName="contactNo" placeholder="Contact No" />
+            </div>
+            <div class="col-md-6">
+              <input type="date" class="form-control" formControlName="dob" />
+            </div>
+            <div class="col-md-6">
+              <input type="text" class="form-control" formControlName="address" placeholder="Current Address" />
+            </div>
+          </div>
+
+          <h6 class="mt-4">CNIC Information</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="upload-box" (click)="fileInputBack.click()">
+                <p>Upload CNIC Back</p>
+                <input type="file" #fileInputBack hidden (change)="onFileSelect($event, 'cnicBack')" accept="image/*" />
+                <img *ngIf="preview.cnicBack" [src]="preview.cnicBack" class="img-thumbnail mt-2" style="height:120px" />
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="upload-box" (click)="fileInputFront.click()">
+                <p>Upload CNIC Front</p>
+                <input type="file" #fileInputFront hidden (change)="onFileSelect($event, 'cnicFront')" accept="image/*" />
+                <img *ngIf="preview.cnicFront" [src]="preview.cnicFront" class="img-thumbnail mt-2" style="height:120px" />
+              </div>
+            </div>
+          </div>
+
+          <h6 class="mt-4">License Information</h6>
+          <div class="upload-box" (click)="fileInputLicense.click()">
+            <p>Upload License</p>
+            <input type="file" #fileInputLicense hidden (change)="onFileSelect($event, 'license')" accept="image/*" />
+            <img *ngIf="preview.license" [src]="preview.license" class="img-thumbnail mt-2" style="height:120px" />
+          </div>
+
+          <h6 class="mt-4">Driver Image</h6>
+          <div class="upload-box" (click)="fileInputDriver.click()">
+            <p>Upload Driver Image</p>
+            <input type="file" #fileInputDriver hidden (change)="onFileSelect($event, 'driverImage')" accept="image/*" />
+            <img *ngIf="preview.driverImage" [src]="preview.driverImage" class="img-thumbnail mt-2" style="height:120px" />
+          </div>
+
+          <h6 class="mt-4">Criminal Record</h6>
+          <div class="upload-box" (click)="fileInputCriminal.click()">
+            <p>Upload Criminal Record</p>
+            <input type="file" #fileInputCriminal hidden (change)="onFileSelect($event, 'criminalRecord')" accept="image/*" />
+            <img *ngIf="preview.criminalRecord" [src]="preview.criminalRecord" class="img-thumbnail mt-2" style="height:120px" />
+          </div>
+
+          <div class="mt-4">
+            <input type="text" class="form-control mb-2" placeholder="Allocated Rikshaw Id" formControlName="rikshawId" />
+            <input type="text" class="form-control" formControlName="cnic" placeholder="Enter 13 Digit CNIC" maxlength="13" />
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn button">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,1 +1,6 @@
 // This file is intentionally left empty to allow customers to add custom CSS if needed.
+.my-gradient-box {
+  background: linear-gradient(to right, #f0fdf4, #eff6ff);
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1rem 1.5rem;
+}

@@ -1,111 +1,185 @@
-// angular import
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-// project import
-import tableData from 'src/fake-data/default-data.json';
-
-import { MonthlyBarChartComponent } from 'src/app/theme/shared/apexchart/monthly-bar-chart/monthly-bar-chart.component';
-import { IncomeOverviewChartComponent } from 'src/app/theme/shared/apexchart/income-overview-chart/income-overview-chart.component';
-import { AnalyticsChartComponent } from 'src/app/theme/shared/apexchart/analytics-chart/analytics-chart.component';
-import { SalesReportChartComponent } from 'src/app/theme/shared/apexchart/sales-report-chart/sales-report-chart.component';
-
-// icons
-import { IconService, IconDirective } from '@ant-design/icons-angular';
-import { FallOutline, GiftOutline, MessageOutline, RiseOutline, SettingOutline } from '@ant-design/icons-angular/icons';
-import { CardComponent } from 'src/app/theme/shared/components/card/card.component';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { IconService } from '@ant-design/icons-angular';
+import { RiseOutline, FallOutline, SettingOutline, GiftOutline, MessageOutline } from '@ant-design/icons-angular/icons';
+import { Modal } from 'bootstrap';
+import { CrmService } from 'src/app/services/crm.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-default',
-  imports: [
-    CommonModule,
-    CardComponent,
-    IconDirective,
-    MonthlyBarChartComponent,
-    IncomeOverviewChartComponent,
-    AnalyticsChartComponent,
-    SalesReportChartComponent
-  ],
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './default.component.html',
   styleUrls: ['./default.component.scss']
 })
-export class DefaultComponent {
+export class DefaultComponent implements OnInit {
   private iconService = inject(IconService);
 
-  // constructor
-  constructor() {
+  @ViewChild('addComplainModal') addComplainModal!: ElementRef;
+  modalInstance!: Modal;
+
+  complainForm!: FormGroup;
+  complaints: any[] = [];
+  paginatedComplaints: any[] = [];
+  loading: boolean = false;
+  driverDetails: any = null;
+  noDataFound: boolean = false;
+
+  complainTypes: string[] = ['Service', 'General', 'Maintenance'];
+
+  // ✅ Only these statuses will show in dropdown
+  allowedStatuses: string[] = ['Pending', 'Completed', 'In-Progress'];
+
+  editIndex: number | null = null;
+
+  // Pagination variables
+  currentPage: number = 1;
+  pageSize: number = 5;
+  totalPages: number = 0;
+
+  constructor(
+    private fb: FormBuilder,
+    private crmService: CrmService,
+    private http: HttpClient
+  ) {
     this.iconService.addIcon(...[RiseOutline, FallOutline, SettingOutline, GiftOutline, MessageOutline]);
   }
 
-  recentOrder = tableData;
+  ngOnInit(): void {
+    this.complainForm = this.fb.group({
+      cnic: ['', Validators.required],
+      driverName: ['', Validators.required],
+      phoneNo: ['', Validators.required],
+      evId: ['', Validators.required],
+      maintenanceType: ['General', Validators.required],
+      title: ['', Validators.required],
+      description: ['', Validators.required],
+      driverImage: ['']
+    });
 
-  AnalyticEcommerce = [
-    {
-      title: 'Total Page Views',
-      amount: '4,42,236',
-      background: 'bg-light-primary ',
-      border: 'border-primary',
-      icon: 'rise',
-      percentage: '59.3%',
-      color: 'text-primary',
-      number: '35,000'
-    },
-    {
-      title: 'Total Users',
-      amount: '78,250',
-      background: 'bg-light-primary ',
-      border: 'border-primary',
-      icon: 'rise',
-      percentage: '70.5%',
-      color: 'text-primary',
-      number: '8,900'
-    },
-    {
-      title: 'Total Order',
-      amount: '18,800',
-      background: 'bg-light-warning ',
-      border: 'border-warning',
-      icon: 'fall',
-      percentage: '27.4%',
-      color: 'text-warning',
-      number: '1,943'
-    },
-    {
-      title: 'Total Sales',
-      amount: '$35,078',
-      background: 'bg-light-warning ',
-      border: 'border-warning',
-      icon: 'fall',
-      percentage: '27.4%',
-      color: 'text-warning',
-      number: '$20,395'
-    }
-  ];
+    this.loadComplaints();
+  }
 
-  transaction = [
-    {
-      background: 'text-success bg-light-success',
-      icon: 'gift',
-      title: 'Order #002434',
-      time: 'Today, 2:00 AM',
-      amount: '+ $1,430',
-      percentage: '78%'
-    },
-    {
-      background: 'text-primary bg-light-primary',
-      icon: 'message',
-      title: 'Order #984947',
-      time: '5 August, 1:45 PM',
-      amount: '- $302',
-      percentage: '8%'
-    },
-    {
-      background: 'text-danger bg-light-danger',
-      icon: 'setting',
-      title: 'Order #988784',
-      time: '7 hours ago',
-      amount: '- $682',
-      percentage: '16%'
+  /** -------------------- LOAD COMPLAINTS -------------------- **/
+  loadComplaints() {
+    this.loading = true;
+    this.crmService.getComplaints().subscribe({
+      next: (res: any) => {
+        this.complaints = Array.isArray(res.complaints) ? res.complaints : [];
+        this.totalPages = Math.ceil(this.complaints.length / this.pageSize);
+        this.setPage(1);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error fetching complaints:', err);
+        this.complaints = [];
+        this.loading = false;
+      }
+    });
+  }
+
+  /** -------------------- PAGINATION -------------------- **/
+  setPage(page: number) {
+    if (page < 1) page = 1;
+    if (page > this.totalPages) page = this.totalPages;
+    this.currentPage = page;
+
+    const start = (page - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    this.paginatedComplaints = this.complaints.slice(start, end);
+  }
+
+  /** -------------------- MODAL HANDLING -------------------- **/
+  openModal() {
+    this.modalInstance = new Modal(this.addComplainModal.nativeElement);
+    this.modalInstance.show();
+    this.noDataFound = false;
+    this.complainForm.reset({ maintenanceType: 'General' });
+    this.driverDetails = null;
+  }
+
+  closeModal() {
+    this.modalInstance.hide();
+  }
+
+  /** -------------------- CNIC VERIFICATION -------------------- **/
+  verifyCNIC() {
+    const cnic = this.complainForm.get('cnic')?.value;
+    if (!cnic) { alert('Please enter CNIC first.'); return; }
+
+    const digitsOnlyCNIC = cnic.replace(/-/g, '');
+    if (digitsOnlyCNIC.length !== 13 || !/^\d+$/.test(digitsOnlyCNIC)) {
+      alert('Please enter a valid 13-digit CNIC.');
+      return;
     }
-  ];
+
+    this.crmService.getDriverDetails(digitsOnlyCNIC).subscribe({
+      next: (res: any) => {
+        if (res && Object.keys(res).length > 0) {
+          this.complainForm.patchValue({
+            driverName: res.name || '',
+            phoneNo: res.contact_number || '',
+            evId: res.allocated_rikshaw || '',
+            driverImage: res.driver_image || ''
+          });
+          this.driverDetails = {
+            driverImage: res.driver_image || '',
+            dob: res.dob,
+            address: res.current_address,
+            licenseImage: res.license_image,
+            cnicFront: res.cnic_front_image,
+            cnicBack: res.cnic_back_image
+          };
+          this.noDataFound = false;
+        } else {
+          this.complainForm.patchValue({ driverName: '', phoneNo: '', evId: '', driverImage: '' });
+          this.driverDetails = null;
+          this.noDataFound = true;
+        }
+      },
+      error: (err) => { console.error('Error fetching driver info:', err); alert('Error fetching driver info'); }
+    });
+  }
+
+  /** -------------------- FORM RESET -------------------- **/
+  refreshForm() {
+    this.complainForm.reset({ maintenanceType: 'General' });
+    this.driverDetails = null;
+    this.noDataFound = false;
+  }
+
+  /** -------------------- NEW COMPLAINT SUBMIT -------------------- **/
+  submitComplain() {
+    if (!this.complainForm.valid) { alert('Please fill all required fields!'); return; }
+
+    const payload = {
+      driver_cnic: this.complainForm.value.cnic,
+      driver_name: this.complainForm.value.driverName,
+      phone_no: this.complainForm.value.phoneNo,
+      ev_id: this.complainForm.value.evId,
+      driver_image: this.complainForm.value.driverImage,
+      complaint_name: this.complainForm.value.title,
+      description: this.complainForm.value.description,
+      type: this.complainForm.value.maintenanceType
+    };
+
+    this.crmService.postComplaint(payload).subscribe({
+      next: () => { alert('Complain submitted successfully!'); this.closeModal(); this.loadComplaints(); },
+      error: (err) => { console.error('Error submitting complain:', err); }
+    });
+  }
+
+  /** -------------------- INLINE ROW EDIT -------------------- **/
+  editRow(index: number) { this.editIndex = index; }
+  cancelEdit() { this.editIndex = null; this.loadComplaints(); }
+
+  saveRow(order: any) {
+    const apiUrl = `http://203.135.63.46:5000/neubolt/crm/put-complaints/${order.complaint_id}`;
+    this.http.put(apiUrl, order).subscribe({
+      next: () => { alert('Complaint updated successfully!'); this.editIndex = null; this.loadComplaints(); },
+      error: (err) => { console.error('Error updating complaint:', err); alert('Failed to update complaint'); }
+    });
+  }
 }

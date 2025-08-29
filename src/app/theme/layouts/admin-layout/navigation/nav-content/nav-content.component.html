@@ -1,34 +1,42 @@
 <!-- Vertical layout -->
+<!-- Vertical layout -->
 <ng-scrollbar style="height: calc(100vh - 49px)" visibility="hover" id="nav-ps-mantis">
-  <div class="navbar-content">
-    <ul class="nav coded-inner-navbar" (clickOutside)="fireOutClick()" (mouseleave)="navMob()">
+  <div class="navbar-content d-flex flex-column align-items-start " style="padding: 2.5rem;">
+
+    <!-- Buttons Container -->
+    <div class="d-flex flex-column gap-3 w-100 mt-5">
+
+      <!-- Home Button -->
+      <button 
+        class="btn button w-100 d-flex align-items-center gap-2 px-3 py-2"
+        [routerLink]="['/dashboard/default']"
+        routerLinkActive="active-btn"
+        [routerLinkActiveOptions]="{ exact: true }">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+      </button>
+
+      <!-- Driver Registration Button -->
+      <button 
+        class="btn button w-100 d-flex align-items-center  px-3 py-2" 
+       style="gap: 4px;"
+        [routerLink]="['/Driver-Registration']"
+        routerLinkActive="active-btn"
+        [routerLinkActiveOptions]="{ exact: true }">
+        <i class="fas fa-car"></i>
+        <span>Driver Registration</span>
+      </button>
+
+    </div>
+
+    <!-- Navigation List -->
+    <ul class="nav coded-inner-navbar mt-4 w-100" (clickOutside)="fireOutClick()" (mouseleave)="navMob()">
       @for (item of navigations; track item) {
-        @if (item.type === 'group') {
-          <app-nav-group [item]="item"></app-nav-group>
-        }
+      @if (item.type === 'group') {
+      <app-nav-group [item]="item"></app-nav-group>
+      }
       }
     </ul>
-    <div class="m-4 mb-0">
-      <div class="card nav-card">
-        <div class="card-body">
-          <div class="d-flex flex-column align-items-center">
-            <img src="assets/images/avatar-group.png" alt="user" class="img-fluid" />
-            <div class="m-t-20 text-center">
-              <h5 class="mb-0">Mantis Pro</h5>
-              <span class="text-muted">Checkout pro features</span>
-            </div>
-            <div class="m-t-20 text-center">
-              <a
-                href="https://codedthemes.com/item/mantis-angular-admin-template/?utm_source=free_demo&utm_medium=codedthemes&utm_campaign=button_download_premium"
-                target="_blank"
-                class="btn btn-primary text-white"
-              >
-                Pro
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+
   </div>
 </ng-scrollbar>

@@ -1,118 +1,194 @@
-<div class="row">
-  @for (analytic of AnalyticEcommerce; track analytic) {
-    <div class="col-md-6 col-xl-3">
-      <app-card [showHeader]="false" blockClass="dashboard-card">
-        <h6 class="mb-2 f-w-400 text-muted">{{ analytic.title }}</h6>
-        <h4 class="mb-3">
-          {{ analytic.amount }}
-          <span class="badge {{ analytic.background }} border {{ analytic.border }} ">
-            <i antIcon type="{{ analytic.icon }}" theme="outline"></i>
-            {{ analytic.percentage }}
-          </span>
-        </h4>
-        <p class="mb-0 text-muted text-sm">
-          You made an extra
-          <span class="{{ analytic.color }}">{{ analytic.number }}</span>
-          this year
-        </p>
-      </app-card>
+<div class="row  my-gradient-box">
+  <div class="col-md-12 col-xl-10">
+    <!-- Title -->
+    <div class="d-flex align-items-center mb-4">
+      <h1 class="fw-bold display-5 mb-0 me-3">CRM Panel</h1>
+      <p class="text-muted fs-5 mb-0">View customer activity, tickets, and feedback.</p>
     </div>
-  }
-  <div class="col-md-12 col-xl-8">
-    <app-monthly-bar-chart />
-  </div>
-  <div class="col-md-12 col-xl-4">
-    <app-income-overview-chart />
-  </div>
 
-  <div class="col-md-12 col-xl-8">
-    <h5 class="mb-3">Recent Orders</h5>
-    <div class="card tbl-card">
+    <!-- Header & Add Button -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">Recent Orders</h5>
+      <button class="btn button" (click)="openModal()">+ Add Complain</button>
+    </div>
+
+    <!-- Add Complain Modal -->
+    <div class="modal fade" #addComplainModal tabindex="-1" aria-labelledby="addComplainModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content p-4">
+          <div class="modal-header border-0">
+            <h5 class="modal-title fw-bold" id="addComplainModalLabel">Add Complain</h5>
+            <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
+          </div>
+
+          <div class="modal-body">
+            <form [formGroup]="complainForm">
+              <!-- CNIC Input -->
+              <div class="mb-3">
+                <label for="cnic" class="form-label">Enter CNIC No of Driver</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" id="cnic" formControlName="cnic" placeholder="XXXXX-XXXXXXX-X">
+                  <button class="btn button" type="button" (click)="verifyCNIC()">Verify</button>
+                  <button class="btn btn-secondary" type="button" (click)="refreshForm()">Refresh</button>
+                </div>
+                <small *ngIf="noDataFound" class="text-danger">No data found for this CNIC. Please fill manually.</small>
+              </div>
+
+              <!-- Driver Info -->
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label class="form-label">Driver Name</label>
+                  <input type="text" class="form-control" formControlName="driverName">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Phone No</label>
+                  <input type="text" class="form-control" formControlName="phoneNo">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">EV-Id</label>
+                  <input type="text" class="form-control" formControlName="evId">
+                </div>
+              </div>
+
+              <!-- Additional Driver Details -->
+              <div *ngIf="driverDetails" class="row mb-3">
+                <div class="col-md-4">
+                  <label class="form-label">Current Address</label>
+                  <input type="text" class="form-control" [value]="driverDetails.address">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Driver Image</label>
+                  <img *ngIf="driverDetails.driverImage" [src]="driverDetails.driverImage" class="img-fluid rounded">
+                </div>
+              </div>
+
+              <!-- Title & Description -->
+              <div class="mb-3">
+                <label for="title" class="form-label">Title*</label>
+                <input type="text" class="form-control" id="title" formControlName="title" placeholder="Complain title">
+              </div>
+              <div class="mb-3">
+                <label for="description" class="form-label">Description*</label>
+                <textarea class="form-control" id="description" formControlName="description" rows="4"
+                  placeholder="Describe your complain"></textarea>
+              </div>
+
+              <!-- Complain Type -->
+              <div class="mb-3">
+                <label for="maintenanceType" class="form-label">Type of Complain</label>
+                <select class="form-select" formControlName="maintenanceType">
+                  <option *ngFor="let type of complainTypes" [value]="type">{{ type }}</option>
+                </select>
+              </div>
+            </form>
+          </div>
+
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+            <button type="button" class="btn button" (click)="submitComplain()">Confirm</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Complaints Table -->
+    <div class="card tbl-card mt-3">
       <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead>
+        <table class="table table-hover table-bordered align-middle">
+          <thead class="table-light">
             <tr>
-              <th>TRACKING NO.</th>
-              <th>PRODUCT NAME</th>
-              <th>STATUS</th>
-              <th class="text-end">TOTAL ORDER</th>
-              <th class="text-end">TOTAL AMOUNT</th>
+              <th>Complain Name</th>
+              <th>Complain Id</th>
+              <th>Status</th>
+              <th>Driver Name</th>
+              <th>Maintenance Type</th>
+              <th>Complain Date</th>
+              <th>Driver CNIC</th>
+              <th>Status Updated</th>
+              <th>EV Id</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            @for (order of recentOrder; track order) {
-              <tr>
+            <tr *ngFor="let order of paginatedComplaints; let i = index">
+              <ng-container *ngIf="editIndex === i; else viewRow">
+                <!-- Editable Row -->
+                <td><input type="text" class="form-control" [(ngModel)]="order.complaint_name" /></td>
+                <td>{{ order.complaint_id }}</td>
                 <td>
-                  <a href="javascript:" class="text-muted">{{ order.id }}</a>
+                  <!-- Dropdown with only 3 statuses -->
+                  <select class="form-select" [(ngModel)]="order.status">
+                    <option *ngFor="let status of allowedStatuses" [value]="status">{{ status }}</option>
+                  </select>
                 </td>
-                <td>{{ order.name }}</td>
+                <td><input type="text" class="form-control" [(ngModel)]="order.driver_name" /></td>
                 <td>
-                  <span class="d-block">
-                    <i class="badge-circle {{ order.status_type }} f-10 m-r-5"></i>
+                  <select class="form-select" [(ngModel)]="order.type">
+                    <option *ngFor="let type of complainTypes" [value]="type">{{ type }}</option>
+                  </select>
+                </td>
+                <td>{{ order.complaint_register_time | date:'short' }}</td>
+                <td><input type="text" class="form-control" [(ngModel)]="order.driver_cnic" /></td>
+                <td>{{ order.status_change_time | date:'short' }}</td>
+                <td><input type="text" class="form-control" [(ngModel)]="order.ev_id" /></td>
+                <td>
+                  <button class="btn button btn-sm me-2" (click)="saveRow(order)">Save</button>
+                  <button class="btn btn-secondary btn-sm" (click)="cancelEdit()">Cancel</button>
+                </td>
+              </ng-container>
+
+              <ng-template #viewRow>
+                <!-- View Row -->
+                <td>{{ order.complaint_name }}</td>
+                <td>{{ order.complaint_id }}</td>
+                <td>
+                  <!-- API se jo bhi status aaye woh badge me show hoga -->
+                  <span class="badge"
+                        [ngClass]="{
+                          'bg-warning text-dark': order.status === 'Pending',
+                          'bg-success': order.status === 'Completed',
+                          'bg-danger': order.status === 'In-Progress',
+                          'bg-info': order.status !== 'Pending' && order.status !== 'Completed' && order.status !== 'In-Progress'
+                        }">
                     {{ order.status }}
                   </span>
                 </td>
-                <td class="text-end">{{ order.quantity }}</td>
-                <td class="text-end">{{ order.amount }}</td>
-              </tr>
-            }
+                <td>{{ order.driver_name }}</td>
+                <td>{{ order.type }}</td>
+                <td>{{ order.complaint_register_time | date:'short' }}</td>
+                <td>{{ order.driver_cnic }}</td>
+                <td>{{ order.status_change_time | date:'short' }}</td>
+                <td>{{ order.ev_id }}</td>
+                <td>
+                  <button class="btn btn-primary btn-sm" (click)="editRow(i)">Edit</button>
+                </td>
+              </ng-template>
+            </tr>
+
+            <tr *ngIf="!loading && complaints.length === 0">
+              <td colspan="10" class="text-center text-muted">No complaints found.</td>
+            </tr>
           </tbody>
         </table>
       </div>
-    </div>
-  </div>
-  <div class="col-md-12 col-xl-4">
-    <app-analytics-chart />
-  </div>
 
-  <div class="col-md-12 col-xl-8">
-    <app-sales-report-chart />
-  </div>
-  <div class="col-md-12 col-xl-4">
-    <h5 class="mb-3">Transaction History</h5>
-    <div class="card">
-      <div class="list-group list-group-flush">
-        @for (history of transaction; track history) {
-          <a href="javascript:" class="list-group-item list-group-item-action px-3">
-            <div class="d-flex">
-              <div class="flex-shrink-0">
-                <div class="avatar avatar-s rounded-circle {{ history.background }}">
-                  <i class="f-16" antIcon type="{{ history.icon }}" theme="outline"></i>
-                </div>
-              </div>
-              <div class="flex-grow-1 ms-3">
-                <h6 class="mb-1">{{ history.title }}</h6>
-                <p class="mb-0 text-muted">{{ history.time }}</p>
-              </div>
-              <div class="flex-shrink-0 text-end">
-                <h6 class="mb-1">{{ history.amount }}</h6>
-                <p class="mb-0 text-muted">{{ history.percentage }}</p>
-              </div>
-            </div>
-          </a>
-        }
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-body">
-        <div class="row justify-content-between">
-          <div class="col-auto">
-            <h5>Help & Support Chat</h5>
-            <p class="mb-3">Typical replay within 5 min</p>
-          </div>
-          <div class="col-auto">
-            <div class="user-group mb-3">
-              <img src="assets/images/user/avatar-1.jpg" alt="image" />
-              <img src="assets/images/user/avatar-2.jpg" alt="image" />
-              <img src="assets/images/user/avatar-3.jpg" alt="image" />
-            </div>
-          </div>
-        </div>
-        <div class="d-grid">
-          <div class="btn btn-primary">Need Help?</div>
-        </div>
-      </div>
+      <!-- Pagination -->
+      <nav aria-label="Page navigation" class="mt-3">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" [class.disabled]="currentPage === 1">
+            <a class="page-link" (click)="setPage(currentPage - 1)">Previous</a>
+          </li>
+
+          <li class="page-item" *ngFor="let page of [].constructor(totalPages); let i = index" 
+              [class.active]="currentPage === (i + 1)">
+            <a class="page-link" (click)="setPage(i + 1)">{{ i + 1 }}</a>
+          </li>
+
+          <li class="page-item" [class.disabled]="currentPage === totalPages">
+            <a class="page-link" (click)="setPage(currentPage + 1)">Next</a>
+          </li>
+        </ul>
+      </nav>
     </div>
   </div>
-  <!-- [ sample-page ] end -->
 </div>

@@ -48,22 +48,22 @@ export class BreadcrumbComponent {
   constructor() {
     this.navigations = NavigationItems;
     this.type = 'theme1';
-    this.setBreadcrumb();
+    // this.setBreadcrumb();
     this.iconService.addIcon(...[GlobalOutline, NodeExpandOutline]);
   }
 
   // public method
-  setBreadcrumb() {
-    this.route.events.subscribe((router: Event) => {
-      if (router instanceof NavigationEnd) {
-        const activeLink = router.url;
-        const breadcrumbList = this.filterNavigation(this.navigations, activeLink);
-        this.navigationList = breadcrumbList;
-        const title = breadcrumbList[breadcrumbList.length - 1]?.title || 'Welcome';
-        this.titleService.setTitle(title + ' | Mantis  Angular Admin Template');
-      }
-    });
-  }
+  // setBreadcrumb() {
+  //   this.route.events.subscribe((router: Event) => {
+  //     if (router instanceof NavigationEnd) {
+  //       const activeLink = router.url;
+  //       const breadcrumbList = this.filterNavigation(this.navigations, activeLink);
+  //       this.navigationList = breadcrumbList;
+  //       const title = breadcrumbList[breadcrumbList.length - 1]?.title || 'Welcome';
+  //       this.titleService.setTitle(title + ' | Mantis  Angular Admin Template');
+  //     }
+  //   });
+  // }
 
   filterNavigation(navItems: NavigationItem[], activeLink: string): titleType[] {
     for (const navItem of navItems) {

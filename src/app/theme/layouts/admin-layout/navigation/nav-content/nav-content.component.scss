@@ -1,1 +1,25 @@
-// This file is intentionally left empty to allow customers to add custom CSS if needed.
+/* Default button style */
+.button {
+  color: #62AC4B;
+  background-color: transparent;
+  border: 1px solid #62AC4B;
+  padding: 6px 12px;
+  border-radius: 100px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.button:hover {
+  color: #ffffff;
+  background-color: #62AC4B;
+  border-color: #62AC4B;
+}
+
+/* ✅ Active (selected) state */
+.active-btn {
+  background-color: #62AC4B !important;
+  color: #ffffff !important;
+  border-color: #62AC4B !important;
+}

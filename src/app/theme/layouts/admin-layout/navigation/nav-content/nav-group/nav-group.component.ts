@@ -4,13 +4,14 @@ import { CommonModule, Location } from '@angular/common';
 
 // project import
 import { NavigationItem } from '../../navigation';
+import { NavCollapseComponent } from "../nav-collapse/nav-collapse.component";
+import { NavItemComponent } from "../nav-item/nav-item.component";
 
-import { NavCollapseComponent } from '../nav-collapse/nav-collapse.component';
-import { NavItemComponent } from '../nav-item/nav-item.component';
+
 
 @Component({
   selector: 'app-nav-group',
-  imports: [CommonModule, NavCollapseComponent, NavItemComponent],
+  imports: [CommonModule,],
   templateUrl: './nav-group.component.html',
   styleUrls: ['./nav-group.component.scss']
 })

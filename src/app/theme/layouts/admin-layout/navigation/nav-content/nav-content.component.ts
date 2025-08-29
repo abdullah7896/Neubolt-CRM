@@ -1,7 +1,7 @@
 // Angular import
 import { Component, OnInit, inject, output } from '@angular/core';
 import { CommonModule, Location, LocationStrategy } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 // project import
 import { NavigationItem, NavigationItems } from '../navigation';
@@ -48,7 +48,7 @@ export class NavContentComponent implements OnInit {
   windowWidth = window.innerWidth;
 
   // Constructor
-  constructor() {
+  constructor(private router: Router) {
     this.iconService.addIcon(
       ...[
         DashboardOutline,
@@ -101,5 +101,8 @@ export class NavContentComponent implements OnInit {
     if (this.windowWidth < 1025 && document.querySelector('app-navigation.coded-navbar').classList.contains('mob-open')) {
       this.NavCollapsedMob.emit();
     }
+  }
+  openDriverRegistration(){
+    this.router.navigate(['/Driver-Registration']);
   }
 }

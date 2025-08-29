@@ -1,33 +1,14 @@
+.container {
+  font-family: Arial, sans-serif;
+}
+
 .card {
-  .card-body.dashboard-card {
-    padding: 18px;
-    padding-bottom: 20px;
-  }
+  border-radius: 10px;
 }
 
-.user-group {
-  img {
-    position: relative;
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    z-index: 2;
-    transition: all 0.1s ease-in-out;
-    border: 2px solid var(--bs-white);
-    + img {
-      margin-left: -14px;
-    }
-    &:hover {
-      z-index: 5;
-    }
-  }
-}
-
-.badge-circle {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.table {
+  border-radius: 8px;
+  overflow: hidden;
 }
 .button {
   color: #62AC4B;      /* Text color */
@@ -55,8 +36,24 @@
     color: white;
   }
 }
+.upload-box {
+  border: 2px dashed #6c757d;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #6c757d;
+  background: #f9f9f9;
+}
 
-/* Pagination container */
+.upload-box:hover {
+  background: #e9ecef;
+  border-color: #28a745;
+  color: #28a745;
+}
+
+
 .pagination {
   justify-content: center; /* center align */
   margin-top: 20px;
@@ -90,9 +87,4 @@
 .page-item.disabled .page-link {
   color: #ccc;
   border-color: #ddd;
-}
-.my-gradient-box {
-  background: linear-gradient(to right, #f0fdf4, #eff6ff);
-  border-bottom: 1px solid #e2e8f0;
-  padding: 1rem 1.5rem;
 }
