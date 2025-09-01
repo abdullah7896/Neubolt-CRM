@@ -1,4 +1,4 @@
-<div class="row  my-gradient-box">
+<div class="row my-gradient-box">
   <div class="col-md-12 col-xl-10">
     <!-- Title -->
     <div class="d-flex align-items-center mb-4">
@@ -97,15 +97,15 @@
         <table class="table table-hover table-bordered align-middle">
           <thead class="table-light">
             <tr>
-              <th>Complain Name</th>
-              <th>Complain Id</th>
-              <th>Status</th>
-              <th>Driver Name</th>
-              <th>Maintenance Type</th>
-              <th>Complain Date</th>
-              <th>Driver CNIC</th>
-              <th>Status Updated</th>
-              <th>EV Id</th>
+              <th (click)="sortTable('complaint_name')">Complain Name {{ getSortIcon('complaint_name') }}</th>
+              <th (click)="sortTable('complaint_id')">Complain Id {{ getSortIcon('complaint_id') }}</th>
+              <th (click)="sortTable('status')">Status {{ getSortIcon('status') }}</th>
+              <th (click)="sortTable('driver_name')">Driver Name {{ getSortIcon('driver_name') }}</th>
+              <th (click)="sortTable('type')">Maintenance Type {{ getSortIcon('type') }}</th>
+              <th (click)="sortTable('complaint_register_time')">Complain Date {{ getSortIcon('complaint_register_time') }}</th>
+              <th (click)="sortTable('driver_cnic')">Driver CNIC {{ getSortIcon('driver_cnic') }}</th>
+              <th (click)="sortTable('status_change_time')">Status Updated {{ getSortIcon('status_change_time') }}</th>
+              <th (click)="sortTable('ev_id')">EV Id {{ getSortIcon('ev_id') }}</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -116,7 +116,6 @@
                 <td><input type="text" class="form-control" [(ngModel)]="order.complaint_name" /></td>
                 <td>{{ order.complaint_id }}</td>
                 <td>
-                  <!-- Dropdown with only 3 statuses -->
                   <select class="form-select" [(ngModel)]="order.status">
                     <option *ngFor="let status of allowedStatuses" [value]="status">{{ status }}</option>
                   </select>
@@ -142,13 +141,11 @@
                 <td>{{ order.complaint_name }}</td>
                 <td>{{ order.complaint_id }}</td>
                 <td>
-                  <!-- API se jo bhi status aaye woh badge me show hoga -->
                   <span class="badge"
                         [ngClass]="{
                           'bg-warning text-dark': order.status === 'Pending',
                           'bg-success': order.status === 'Completed',
-                          'bg-danger': order.status === 'In-Progress',
-                          'bg-info': order.status !== 'Pending' && order.status !== 'Completed' && order.status !== 'In-Progress'
+                          'bg-danger': order.status === 'In-Progress'
                         }">
                     {{ order.status }}
                   </span>

@@ -1,11 +1,9 @@
 import { Component, inject, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { IconService } from '@ant-design/icons-angular';
-import { RiseOutline, FallOutline, SettingOutline, GiftOutline, MessageOutline } from '@ant-design/icons-angular/icons';
 import { Modal } from 'bootstrap';
-import { CrmService } from 'src/app/services/crm.service';
 import { HttpClient } from '@angular/common/http';
+import { CrmService } from 'src/app/services/crm.service';
 
 @Component({
   selector: 'app-default',
@@ -15,8 +13,6 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./default.component.scss']
 })
 export class DefaultComponent implements OnInit {
-  private iconService = inject(IconService);
-
   @ViewChild('addComplainModal') addComplainModal!: ElementRef;
   modalInstance!: Modal;
 
@@ -28,26 +24,32 @@ export class DefaultComponent implements OnInit {
   noDataFound: boolean = false;
 
   complainTypes: string[] = ['Service', 'General', 'Maintenance'];
-
-  // ✅ Only these statuses will show in dropdown
   allowedStatuses: string[] = ['Pending', 'Completed', 'In-Progress'];
 
   editIndex: number | null = null;
 
-  // Pagination variables
+  // Pagination
   currentPage: number = 1;
   pageSize: number = 5;
   totalPages: number = 0;
+
+  // Sorting
+  sortConfig: { column: string; direction: 'asc' | 'desc' | '' }[] = [];
+
+  columns: string[] = [
+    'complaint_name', 'complaint_id', 'status', 'driver_name',
+    'type', 'complaint_register_time', 'driver_cnic',
+    'status_change_time', 'ev_id'
+  ];
 
   constructor(
     private fb: FormBuilder,
     private crmService: CrmService,
     private http: HttpClient
-  ) {
-    this.iconService.addIcon(...[RiseOutline, FallOutline, SettingOutline, GiftOutline, MessageOutline]);
-  }
+  ) {}
 
   ngOnInit(): void {
+    // Initialize form
     this.complainForm = this.fb.group({
       cnic: ['', Validators.required],
       driverName: ['', Validators.required],
@@ -59,10 +61,13 @@ export class DefaultComponent implements OnInit {
       driverImage: ['']
     });
 
+    // Initialize default sorting icons (all unsorted by default)
+    this.sortConfig = this.columns.map(col => ({ column: col, direction: '' }));
+
     this.loadComplaints();
   }
 
-  /** -------------------- LOAD COMPLAINTS -------------------- **/
+  /** ---------------- LOAD COMPLAINTS ---------------- */
   loadComplaints() {
     this.loading = true;
     this.crmService.getComplaints().subscribe({
@@ -80,7 +85,7 @@ export class DefaultComponent implements OnInit {
     });
   }
 
-  /** -------------------- PAGINATION -------------------- **/
+  /** ---------------- PAGINATION ---------------- */
   setPage(page: number) {
     if (page < 1) page = 1;
     if (page > this.totalPages) page = this.totalPages;
@@ -91,7 +96,7 @@ export class DefaultComponent implements OnInit {
     this.paginatedComplaints = this.complaints.slice(start, end);
   }
 
-  /** -------------------- MODAL HANDLING -------------------- **/
+  /** ---------------- MODAL ---------------- */
   openModal() {
     this.modalInstance = new Modal(this.addComplainModal.nativeElement);
     this.modalInstance.show();
@@ -100,11 +105,9 @@ export class DefaultComponent implements OnInit {
     this.driverDetails = null;
   }
 
-  closeModal() {
-    this.modalInstance.hide();
-  }
+  closeModal() { this.modalInstance.hide(); }
 
-  /** -------------------- CNIC VERIFICATION -------------------- **/
+  /** ---------------- CNIC VERIFICATION ---------------- */
   verifyCNIC() {
     const cnic = this.complainForm.get('cnic')?.value;
     if (!cnic) { alert('Please enter CNIC first.'); return; }
@@ -143,14 +146,14 @@ export class DefaultComponent implements OnInit {
     });
   }
 
-  /** -------------------- FORM RESET -------------------- **/
+  /** ---------------- RESET FORM ---------------- */
   refreshForm() {
     this.complainForm.reset({ maintenanceType: 'General' });
     this.driverDetails = null;
     this.noDataFound = false;
   }
 
-  /** -------------------- NEW COMPLAINT SUBMIT -------------------- **/
+  /** ---------------- SUBMIT COMPLAINT ---------------- */
   submitComplain() {
     if (!this.complainForm.valid) { alert('Please fill all required fields!'); return; }
 
@@ -166,12 +169,16 @@ export class DefaultComponent implements OnInit {
     };
 
     this.crmService.postComplaint(payload).subscribe({
-      next: () => { alert('Complain submitted successfully!'); this.closeModal(); this.loadComplaints(); },
+      next: () => { 
+        alert('Complain submitted successfully!'); 
+        this.closeModal(); 
+        this.loadComplaints(); 
+      },
       error: (err) => { console.error('Error submitting complain:', err); }
     });
   }
 
-  /** -------------------- INLINE ROW EDIT -------------------- **/
+  /** ---------------- INLINE ROW EDIT ---------------- */
   editRow(index: number) { this.editIndex = index; }
   cancelEdit() { this.editIndex = null; this.loadComplaints(); }
 
@@ -181,5 +188,39 @@ export class DefaultComponent implements OnInit {
       next: () => { alert('Complaint updated successfully!'); this.editIndex = null; this.loadComplaints(); },
       error: (err) => { console.error('Error updating complaint:', err); alert('Failed to update complaint'); }
     });
+  }
+
+  /** ---------------- SORTING ---------------- */
+  sortTable(column: string) {
+    const config = this.sortConfig.find(c => c.column === column);
+    if (config) {
+      // toggle asc / desc
+      config.direction = config.direction === 'asc' ? 'desc' : (config.direction === 'desc' ? '' : 'asc');
+    }
+    this.applySorting();
+  }
+
+  applySorting() {
+    const activeSort = this.sortConfig.find(c => c.direction !== '');
+    if (!activeSort) { this.setPage(1); return; }
+
+    const { column, direction } = activeSort;
+    this.complaints.sort((a: any, b: any) => {
+      let valA = a[column], valB = b[column];
+      if (column.includes('time')) { valA = new Date(valA).getTime(); valB = new Date(valB).getTime(); }
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+      if (valA < valB) return direction === 'asc' ? -1 : 1;
+      if (valA > valB) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    this.setPage(1);
+  }
+
+  getSortIcon(column: string): string {
+    const config = this.sortConfig.find(c => c.column === column);
+    if (!config || config.direction === '') return '↕'; // default unsorted icon
+    return config.direction === 'asc' ? '↑' : '↓';
   }
 }

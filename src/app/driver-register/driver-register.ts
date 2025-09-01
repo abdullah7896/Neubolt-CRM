@@ -21,6 +21,8 @@ export class DriverRegister implements OnInit {
   files: any = { cnicFront: null, cnicBack: null, license: null, driverImage: null, criminalRecord: null };
   preview: any = { cnicFront: null, cnicBack: null, license: null, driverImage: null, criminalRecord: null };
 
+  sortConfig: { column: string; direction: 'asc' | 'desc' }[] = [];
+
   @ViewChild('fileInputFront') fileInputFront!: ElementRef;
   @ViewChild('fileInputBack') fileInputBack!: ElementRef;
   @ViewChild('fileInputLicense') fileInputLicense!: ElementRef;
@@ -108,5 +110,39 @@ export class DriverRegister implements OnInit {
         alert('Failed to register driver!');
       }
     });
+  }
+
+  /** -------------------- SORTING -------------------- **/
+  sortTable(column: string) {
+    const existing = this.sortConfig.find(s => s.column === column);
+    if (existing) {
+      existing.direction = existing.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortConfig = [{ column, direction: 'asc' }];
+    }
+    this.applySorting();
+  }
+
+  applySorting() {
+    this.evData.sort((a: any, b: any) => {
+      for (let config of this.sortConfig) {
+        let valueA = a[config.column];
+        let valueB = b[config.column];
+
+        if (typeof valueA === 'string') valueA = valueA.toLowerCase();
+        if (typeof valueB === 'string') valueB = valueB.toLowerCase();
+
+        if (valueA < valueB) return config.direction === 'asc' ? -1 : 1;
+        if (valueA > valueB) return config.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+    this.setPage(1);
+  }
+
+  getSortIcon(column: string): string {
+    const config = this.sortConfig.find(s => s.column === column);
+    if (!config) return '↕'; // default sorting icon
+    return config.direction === 'asc' ? '↑' : '↓';
   }
 }

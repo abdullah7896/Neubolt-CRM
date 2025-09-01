@@ -13,11 +13,11 @@
     <table class="table table-bordered table-hover text-center align-middle">
       <thead class="table-light">
         <tr>
-          <th>Driver-ID</th>
-          <th>Driver Name</th>
-          <th>Contact No</th>
-          <th>Allocated Ev Id</th>
-          <th>CNIC</th>
+          <th (click)="sortTable('driver_id')">Driver-ID {{ getSortIcon('driver_id') }}</th>
+          <th (click)="sortTable('name')">Driver Name {{ getSortIcon('name') }}</th>
+          <th (click)="sortTable('contact_number')">Contact No {{ getSortIcon('contact_number') }}</th>
+          <th (click)="sortTable('allocated_rikshaw')">Allocated Ev Id {{ getSortIcon('allocated_rikshaw') }}</th>
+          <th (click)="sortTable('cnic_number')">CNIC {{ getSortIcon('cnic_number') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -27,6 +27,9 @@
           <td>{{ ev.contact_number }}</td>
           <td>{{ ev.allocated_rikshaw }}</td>
           <td>{{ ev.cnic_number }}</td>
+        </tr>
+        <tr *ngIf="evData.length === 0">
+          <td colspan="5" class="text-center text-muted">No data found.</td>
         </tr>
       </tbody>
     </table>
@@ -50,7 +53,7 @@
   </div>
 </div>
 
-<!-- Modal -->
+<!-- Register Driver Modal -->
 <div class="modal fade" id="registerDriverModal" tabindex="-1" aria-labelledby="registerDriverLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content p-3">
