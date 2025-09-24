@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CrmService } from 'src/app/services/crm.service';
 
@@ -18,16 +18,9 @@ export class DriverRegister implements OnInit {
   totalPages = 0;
 
   driverForm: FormGroup;
-  files: any = { cnicFront: null, cnicBack: null, license: null, driverImage: null, criminalRecord: null };
-  preview: any = { cnicFront: null, cnicBack: null, license: null, driverImage: null, criminalRecord: null };
+  selectedDriver: any = null;   // 🔹 Row click ke liye
 
   sortConfig: { column: string; direction: 'asc' | 'desc' }[] = [];
-
-  @ViewChild('fileInputFront') fileInputFront!: ElementRef;
-  @ViewChild('fileInputBack') fileInputBack!: ElementRef;
-  @ViewChild('fileInputLicense') fileInputLicense!: ElementRef;
-  @ViewChild('fileInputDriver') fileInputDriver!: ElementRef;
-  @ViewChild('fileInputCriminal') fileInputCriminal!: ElementRef;
 
   constructor(private fb: FormBuilder, private crm: CrmService) {
     this.driverForm = this.fb.group({
@@ -65,19 +58,6 @@ export class DriverRegister implements OnInit {
     this.paginatedData = this.evData.slice(start, end);
   }
 
-  onFileSelect(event: any, field: string) {
-    if (event.target.files && event.target.files.length > 0) {
-      const file = event.target.files[0];
-      this.files[field] = file;
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.preview[field] = reader.result as string;
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
   onSubmit() {
     if (!this.driverForm.valid) {
       alert('Please fill all required fields!');
@@ -90,19 +70,13 @@ export class DriverRegister implements OnInit {
       cnic_number: this.driverForm.get('cnic')?.value,
       dob: this.driverForm.get('dob')?.value,
       current_address: this.driverForm.get('address')?.value,
-      allocated_rikshaw: this.driverForm.get('rikshawId')?.value,
-      driver_image: this.files.driverImage ? this.files.driverImage.name : 'uploads/drivers/default.jpg',
-      cnic_front_image: this.files.cnicFront ? this.files.cnicFront.name : 'uploads/cnic/front_default.jpg',
-      cnic_back_image: this.files.cnicBack ? this.files.cnicBack.name : 'uploads/cnic/back_default.jpg',
-      license_image: this.files.license ? this.files.license.name : 'uploads/license/default.jpg',
-      criminal_record_image: this.files.criminalRecord ? this.files.criminalRecord.name : 'uploads/criminal/none.jpg'
+      allocated_rikshaw: this.driverForm.get('rikshawId')?.value
     };
 
     this.crm.postDriver(driverData).subscribe({
       next: () => {
         alert('Driver Registered Successfully ✅');
         this.driverForm.reset();
-        this.preview = { cnicFront: null, cnicBack: null, license: null, driverImage: null, criminalRecord: null };
         this.loadDrivers();
       },
       error: (err) => {
@@ -144,5 +118,10 @@ export class DriverRegister implements OnInit {
     const config = this.sortConfig.find(s => s.column === column);
     if (!config) return '↕'; // default sorting icon
     return config.direction === 'asc' ? '↑' : '↓';
+  }
+
+  /** -------------------- ROW CLICK (Detail Modal) -------------------- **/
+  openDetails(driver: any) {
+    this.selectedDriver = driver;
   }
 }

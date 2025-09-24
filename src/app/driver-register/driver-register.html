@@ -21,7 +21,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let ev of paginatedData">
+        <tr *ngFor="let ev of paginatedData" 
+            (click)="openDetails(ev)" 
+            data-bs-toggle="modal" 
+            data-bs-target="#driverDetailModal" 
+            style="cursor:pointer">
           <td>{{ ev.evId || ev.driver_id }}</td>
           <td>{{ ev.name }}</td>
           <td>{{ ev.contact_number }}</td>
@@ -52,7 +56,31 @@
   </div>
 </div>
 
-<!-- Register Driver Modal -->
+<!-- 🔹 Driver Detail Modal -->
+<div class="modal fade" id="driverDetailModal" tabindex="-1" aria-labelledby="driverDetailLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content p-3">
+      <div class="modal-header">
+        <h5 class="modal-title" id="driverDetailLabel">Driver Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body" *ngIf="selectedDriver">
+        <p><strong>Driver ID:</strong> {{ selectedDriver.evId || selectedDriver.driver_id }}</p>
+        <p><strong>Name:</strong> {{ selectedDriver.name }}</p>
+        <p><strong>Contact:</strong> {{ selectedDriver.contact_number }}</p>
+        <p><strong>Allocated EV:</strong> {{ selectedDriver.allocated_rikshaw }}</p>
+        <p><strong>CNIC:</strong> {{ selectedDriver.cnic_number }}</p>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 🔹 Register Driver Modal -->
 <div class="modal fade" id="registerDriverModal" tabindex="-1" aria-labelledby="registerDriverLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content p-3">
@@ -83,53 +111,6 @@
             <input type="text" class="form-control" formControlName="cnic" placeholder="Enter 13 Digit CNIC"
               maxlength="13" />
           </div>
-          <h6 class="mt-4">CNIC Information</h6>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <div class="upload-box" (click)="fileInputBack.click()">
-                <p>Upload CNIC Back</p>
-                <input type="file" #fileInputBack hidden (change)="onFileSelect($event, 'cnicBack')" accept="image/*" />
-                <img *ngIf="preview.cnicBack" [src]="preview.cnicBack" class="img-thumbnail mt-2"
-                  style="height:120px" />
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="upload-box" (click)="fileInputFront.click()">
-                <p>Upload CNIC Front</p>
-                <input type="file" #fileInputFront hidden (change)="onFileSelect($event, 'cnicFront')"
-                  accept="image/*" />
-                <img *ngIf="preview.cnicFront" [src]="preview.cnicFront" class="img-thumbnail mt-2"
-                  style="height:120px" />
-              </div>
-            </div>
-          </div>
-
-          <h6 class="mt-4">License Information</h6>
-          <div class="upload-box" (click)="fileInputLicense.click()">
-            <p>Upload License</p>
-            <input type="file" #fileInputLicense hidden (change)="onFileSelect($event, 'license')" accept="image/*" />
-            <img *ngIf="preview.license" [src]="preview.license" class="img-thumbnail mt-2" style="height:120px" />
-          </div>
-
-          <h6 class="mt-4">Driver Image</h6>
-          <div class="upload-box" (click)="fileInputDriver.click()">
-            <p>Upload Driver Image</p>
-            <input type="file" #fileInputDriver hidden (change)="onFileSelect($event, 'driverImage')"
-              accept="image/*" />
-            <img *ngIf="preview.driverImage" [src]="preview.driverImage" class="img-thumbnail mt-2"
-              style="height:120px" />
-          </div>
-
-          <h6 class="mt-4">Criminal Record</h6>
-          <div class="upload-box" (click)="fileInputCriminal.click()">
-            <p>Upload Criminal Record</p>
-            <input type="file" #fileInputCriminal hidden (change)="onFileSelect($event, 'criminalRecord')"
-              accept="image/*" />
-            <img *ngIf="preview.criminalRecord" [src]="preview.criminalRecord" class="img-thumbnail mt-2"
-              style="height:120px" />
-          </div>
-
-
         </div>
 
         <div class="modal-footer">
