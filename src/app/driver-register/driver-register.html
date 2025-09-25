@@ -81,6 +81,7 @@
 </div>
 
 <!-- 🔹 Register Driver Modal -->
+<!-- 🔹 Register Driver Modal -->
 <div class="modal fade" id="registerDriverModal" tabindex="-1" aria-labelledby="registerDriverLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content p-3">
@@ -90,34 +91,60 @@
       </div>
 
       <form [formGroup]="driverForm" (ngSubmit)="onSubmit()">
-        <div class="modal-body">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <input type="text" class="form-control" formControlName="name" placeholder="Full Name" />
-            </div>
-            <div class="col-md-6">
-              <input type="text" class="form-control" formControlName="contactNo" placeholder="Contact No" />
-            </div>
-            <div class="col-md-6">
-              <input type="date" class="form-control" formControlName="dob" />
-            </div>
-            <div class="col-md-6">
-              <input type="text" class="form-control" formControlName="address" placeholder="Current Address" />
-            </div>
-          </div>
-          <div class="mt-4">
-            <input type="text" class="form-control mb-2" placeholder="Allocated Rikshaw Id"
-              formControlName="rikshawId" />
-            <input type="text" class="form-control" formControlName="cnic" placeholder="Enter 13 Digit CNIC"
-              maxlength="13" />
-          </div>
-        </div>
+  <div class="modal-body">
+    <div class="row g-3">
+      <!-- Name -->
+      <div class="col-md-6">
+        <input type="text" class="form-control" formControlName="name" placeholder="Full Name" />
+      </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn button">Submit</button>
-        </div>
-      </form>
+      <!-- Contact Number -->
+      <div class="col-md-6">
+        <input type="text" class="form-control" formControlName="contact_number" placeholder="Contact Number (11 digits)" maxlength="11" />
+      </div>
+
+      <!-- Date of Birth -->
+      <div class="col-md-6">
+        <input type="date" class="form-control" formControlName="dob" />
+      </div>
+
+      <!-- Address -->
+      <div class="col-md-6">
+        <input type="text" class="form-control" formControlName="current_address" placeholder="Current Address" />
+      </div>
+    </div>
+
+    <!-- Rikshaw Allocation + CNIC -->
+    <div class="mt-4">
+      <input type="text" class="form-control mb-2" placeholder="Allocated Rikshaw Id" formControlName="allocated_rikshaw" />
+      <input type="text" class="form-control" formControlName="cnic_number" placeholder="Enter 13 Digit CNIC" maxlength="13" />
+    </div>
+
+    <!-- Optional File Uploads -->
+    <div class="mt-4">
+      <label class="form-label">Driver Image</label>
+      <input type="file" class="form-control mb-2" (change)="onFileSelect($event, 'driver_image')" />
+
+      <label class="form-label">CNIC Front</label>
+      <input type="file" class="form-control mb-2" (change)="onFileSelect($event, 'cnic_front_image')" />
+
+      <label class="form-label">CNIC Back</label>
+      <input type="file" class="form-control mb-2" (change)="onFileSelect($event, 'cnic_back_image')" />
+
+      <label class="form-label">License Image</label>
+      <input type="file" class="form-control mb-2" (change)="onFileSelect($event, 'license_image')" />
+
+      <label class="form-label">Criminal Record Image</label>
+      <input type="file" class="form-control" (change)="onFileSelect($event, 'criminal_record_image')" />
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+    <button type="submit" class="btn button">Submit</button>
+  </div>
+</form>
+
     </div>
   </div>
 </div>
