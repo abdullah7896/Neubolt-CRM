@@ -6,6 +6,7 @@ import { AdminComponent } from './theme/layouts/admin-layout/admin-layout.compon
 import { DefaultComponent } from './demo/dashboard/default/default.component';
 import { GuestLayoutComponent } from './theme/layouts/guest-layout/guest-layout.component';
 import { DriverRegister } from './driver-register/driver-register';
+import { AuthLoginComponent } from './demo/pages/authentication/auth-login/auth-login.component';
 
 const routes: Routes = [
   {
@@ -14,7 +15,7 @@ const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'dashboard/default',
+        redirectTo: '/login',
         pathMatch: 'full'
       },
        {
@@ -24,7 +25,32 @@ const routes: Routes = [
       {
         path: 'dashboard/default',
         component: DefaultComponent
-      }
+      },
+     
+
+
+    ]
+  },
+   {
+    path: '',
+    component: GuestLayoutComponent,
+    children: [
+      {
+        path: 'login',
+        loadComponent: () => import('./demo/pages/authentication/auth-login/auth-login.component').then((c) => c.AuthLoginComponent)
+      },
+      {
+        path: 'register',
+        loadComponent: () =>
+          import('./demo/pages/authentication/auth-register/auth-register.component').then((c) => c.AuthRegisterComponent)
+      },
+      {
+        path: 'register',
+        loadComponent: () =>
+          import('./demo/pages/authentication/auth-register/auth-register.component').then((c) => c.AuthRegisterComponent)
+      },
+      
+     
     ]
   },
   // Optional: guest routes can be removed if not needed

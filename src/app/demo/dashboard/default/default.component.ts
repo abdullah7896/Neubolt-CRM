@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } 
 import { Modal } from 'bootstrap';
 import { HttpClient } from '@angular/common/http';
 import { CrmService } from 'src/app/services/crm.service';
+import { AuthLoginComponent } from "../../pages/authentication/auth-login/auth-login.component";
 
 @Component({
   selector: 'app-default',

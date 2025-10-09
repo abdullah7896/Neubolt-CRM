@@ -1,19 +1,12 @@
-// angular import
 import { Component, output } from '@angular/core';
-
-// project import
-
-import { NavLeftComponent } from './nav-left/nav-left.component';
-import { NavRightComponent } from './nav-right/nav-right.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-nav-bar',
-  imports: [],
   templateUrl: './nav-bar.component.html',
   styleUrls: ['./nav-bar.component.scss']
 })
 export class NavBarComponent {
-  // public props
   NavCollapse = output();
   NavCollapsedMob = output();
 
@@ -21,13 +14,11 @@ export class NavBarComponent {
   windowWidth: number;
   navCollapsedMob: boolean;
 
-  // Constructor
-  constructor() {
+  constructor(private router: Router) {
     this.windowWidth = window.innerWidth;
     this.navCollapsedMob = false;
   }
 
-  // public method
   navCollapse() {
     if (this.windowWidth >= 1025) {
       this.navCollapsed = !this.navCollapsed;
@@ -39,5 +30,21 @@ export class NavBarComponent {
     if (this.windowWidth < 1025) {
       this.NavCollapsedMob.emit();
     }
+  }
+
+  // ✅ Logout method
+  logout() {
+    // 1️⃣ Clear any authentication data (token, user info, etc.)
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // 2️⃣ Navigate to login page
+    this.router.navigate(['/login']).then(() => {
+      // 3️⃣ Prevent going back using browser back button
+      window.history.pushState(null, '', window.location.href);
+      window.onpopstate = function () {
+        window.history.go(1);
+      };
+    });
   }
 }
