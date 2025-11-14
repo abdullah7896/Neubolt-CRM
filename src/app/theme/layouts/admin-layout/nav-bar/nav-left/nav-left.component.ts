@@ -33,4 +33,12 @@ export class NavLeftComponent {
   navCollapse() {
     this.NavCollapse.emit();
   }
+  // In NavLeftComponent
+onHamburgerClick() {
+  if (window.innerWidth < 1025) {
+    this.NavCollapsedMob.emit();  // Emits to parent
+  } else {
+    this.NavCollapse.emit();
+  }
+}
 }

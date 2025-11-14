@@ -1,9 +1,9 @@
 <div class="container mt-5">
-  <h2 class="fw-bold">Admin Panel – Track Registered EV Data</h2>
+  <h2 class="fw-bold">Admin Panel – Track Registered Driver Data</h2>
 
   <div class="card mt-4 p-4 shadow-sm">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4 class="mb-0">Registered EV Data</h4>
+      <h4 class="mb-0">Registered Driver Data</h4>
       <button class="btn button" data-bs-toggle="modal" data-bs-target="#registerDriverModal">
         + Register Driver
       </button>
@@ -104,36 +104,76 @@
       <form [formGroup]="driverForm" (ngSubmit)="onSubmit()">
         <div class="modal-body">
           <div class="row g-3">
+            <!-- Full Name -->
             <div class="col-md-6">
-              <input type="text" class="form-control" formControlName="name" placeholder="Full Name" />
+              <input type="text" class="form-control"
+                     formControlName="name" placeholder="Full Name" />
+              <small class="text-danger" *ngIf="driverForm.get('name')?.invalid && driverForm.get('name')?.touched">
+                Only letters allowed
+              </small>
             </div>
+
+            <!-- Contact Number -->
             <div class="col-md-6">
-              <input type="text" class="form-control" formControlName="contact_number" placeholder="Contact Number (11 digits)" maxlength="11" />
+              <input type="text" class="form-control"
+                     formControlName="contact_number" placeholder="Contact Number (11 digits)" maxlength="11" />
+              <small class="text-danger" *ngIf="driverForm.get('contact_number')?.invalid && driverForm.get('contact_number')?.touched">
+                Must be 11 digits
+              </small>
             </div>
+
+            <!-- DOB -->
             <div class="col-md-6">
               <input type="date" class="form-control" formControlName="dob" />
+              <small class="text-danger" *ngIf="driverForm.get('dob')?.invalid && driverForm.get('dob')?.touched">
+                Date of Birth required
+              </small>
             </div>
+
+            <!-- Current Address -->
             <div class="col-md-6">
-              <input type="text" class="form-control" formControlName="current_address" placeholder="Current Address" />
+              <input type="text" class="form-control"
+                     formControlName="current_address" placeholder="Current Address" />
+              <small class="text-danger" *ngIf="driverForm.get('current_address')?.invalid && driverForm.get('current_address')?.touched">
+                Address must be at least 5 characters
+              </small>
             </div>
           </div>
 
+          <!-- Allocated Rikshaw ID & CNIC -->
           <div class="mt-4">
-            <input type="text" class="form-control mb-2" placeholder="Allocated Rikshaw Id" formControlName="allocated_rikshaw" />
+            <input type="text" class="form-control mb-2" placeholder="Allocated Rikshaw ID (e.g. RK005)" formControlName="allocated_rikshaw" />
+            <small class="text-danger" *ngIf="driverForm.get('allocated_rikshaw')?.invalid && driverForm.get('allocated_rikshaw')?.touched">
+              Format must be like RK005
+            </small>
+
             <input type="text" class="form-control" formControlName="cnic_number" placeholder="Enter 13 Digit CNIC" maxlength="13" />
+            <small class="text-danger" *ngIf="driverForm.get('cnic_number')?.invalid && driverForm.get('cnic_number')?.touched">
+              CNIC must be 13 digits
+            </small>
           </div>
 
+          <!-- File Uploads -->
           <div class="mt-4">
             <label class="form-label">Driver Image</label>
             <input type="file" class="form-control mb-2" (change)="onFileSelect($event, 'driver_image')" />
+            <small class="text-danger" *ngIf="imageErrors['driver_image']">{{ imageErrors['driver_image'] }}</small>
+
             <label class="form-label">CNIC Front</label>
             <input type="file" class="form-control mb-2" (change)="onFileSelect($event, 'cnic_front_image')" />
+            <small class="text-danger" *ngIf="imageErrors['cnic_front_image']">{{ imageErrors['cnic_front_image'] }}</small>
+
             <label class="form-label">CNIC Back</label>
             <input type="file" class="form-control mb-2" (change)="onFileSelect($event, 'cnic_back_image')" />
+            <small class="text-danger" *ngIf="imageErrors['cnic_back_image']">{{ imageErrors['cnic_back_image'] }}</small>
+
             <label class="form-label">License Image</label>
             <input type="file" class="form-control mb-2" (change)="onFileSelect($event, 'license_image')" />
+            <small class="text-danger" *ngIf="imageErrors['license_image']">{{ imageErrors['license_image'] }}</small>
+
             <label class="form-label">Criminal Record Image</label>
             <input type="file" class="form-control" (change)="onFileSelect($event, 'criminal_record_image')" />
+            <small class="text-danger" *ngIf="imageErrors['criminal_record_image']">{{ imageErrors['criminal_record_image'] }}</small>
           </div>
         </div>
 

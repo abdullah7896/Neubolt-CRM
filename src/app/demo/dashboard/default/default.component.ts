@@ -1,10 +1,10 @@
-import { Component, inject, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Modal } from 'bootstrap';
 import { HttpClient } from '@angular/common/http';
+import { DomSanitizer } from '@angular/platform-browser';
 import { CrmService } from 'src/app/services/crm.service';
-import { AuthLoginComponent } from "../../pages/authentication/auth-login/auth-login.component";
 
 @Component({
   selector: 'app-default',
@@ -28,15 +28,11 @@ export class DefaultComponent implements OnInit {
   allowedStatuses: string[] = ['Pending', 'Completed', 'In-Progress'];
 
   editIndex: number | null = null;
-
-  // Pagination
   currentPage: number = 1;
   pageSize: number = 5;
   totalPages: number = 0;
 
-  // Sorting
   sortConfig: { column: string; direction: 'asc' | 'desc' | '' }[] = [];
-
   columns: string[] = [
     'complaint_name', 'complaint_id', 'status', 'driver_name',
     'type', 'complaint_register_time', 'driver_cnic',
@@ -46,25 +42,23 @@ export class DefaultComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private crmService: CrmService,
-    private http: HttpClient
+    private http: HttpClient,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
-    // Initialize form
     this.complainForm = this.fb.group({
-      cnic: ['', Validators.required],
-      driverName: ['', Validators.required],
-      phoneNo: ['', Validators.required],
+      cnic: ['', [Validators.required, Validators.pattern(/^\d{5}-\d{7}-\d{1}$/)]],
+      driverName: ['', [Validators.required, Validators.pattern(/^[A-Za-z ]{3,50}$/)]],
+      phoneNo: ['', [Validators.required, Validators.pattern(/^\d{10,12}$/)]],
       evId: ['', Validators.required],
       maintenanceType: ['General', Validators.required],
-      title: ['', Validators.required],
-      description: ['', Validators.required],
+      title: ['', [Validators.required, Validators.maxLength(100)]],
+      description: ['', [Validators.required, Validators.maxLength(500)]],
       driverImage: ['']
     });
 
-    // Initialize default sorting icons (all unsorted by default)
     this.sortConfig = this.columns.map(col => ({ column: col, direction: '' }));
-
     this.loadComplaints();
   }
 
@@ -106,12 +100,17 @@ export class DefaultComponent implements OnInit {
     this.driverDetails = null;
   }
 
-  closeModal() { this.modalInstance.hide(); }
+  closeModal() {
+    this.modalInstance.hide();
+  }
 
   /** ---------------- CNIC VERIFICATION ---------------- */
   verifyCNIC() {
     const cnic = this.complainForm.get('cnic')?.value;
-    if (!cnic) { alert('Please enter CNIC first.'); return; }
+    if (!cnic) {
+      alert('Please enter CNIC first.');
+      return;
+    }
 
     const digitsOnlyCNIC = cnic.replace(/-/g, '');
     if (digitsOnlyCNIC.length !== 13 || !/^\d+$/.test(digitsOnlyCNIC)) {
@@ -130,20 +129,24 @@ export class DefaultComponent implements OnInit {
           });
           this.driverDetails = {
             driverImage: res.driver_image || '',
-            dob: res.dob,
-            address: res.current_address,
-            licenseImage: res.license_image,
-            cnicFront: res.cnic_front_image,
-            cnicBack: res.cnic_back_image
+            address: res.current_address || '',
           };
           this.noDataFound = false;
         } else {
-          this.complainForm.patchValue({ driverName: '', phoneNo: '', evId: '', driverImage: '' });
+          this.complainForm.patchValue({
+            driverName: '',
+            phoneNo: '',
+            evId: '',
+            driverImage: ''
+          });
           this.driverDetails = null;
           this.noDataFound = true;
         }
       },
-      error: (err) => { console.error('Error fetching driver info:', err); alert('Error fetching driver info'); }
+      error: (err) => {
+        console.error('Error fetching driver info:', err);
+        alert('Error fetching driver info');
+      }
     });
   }
 
@@ -154,9 +157,23 @@ export class DefaultComponent implements OnInit {
     this.noDataFound = false;
   }
 
+  /** ---------------- SANITIZATION ---------------- */
+  sanitizeInput(value: string): string {
+    const div = document.createElement('div');
+    div.innerText = value;
+    return div.innerHTML.trim();
+  }
+
   /** ---------------- SUBMIT COMPLAINT ---------------- */
   submitComplain() {
-    if (!this.complainForm.valid) { alert('Please fill all required fields!'); return; }
+    if (this.complainForm.invalid) {
+      alert('Please fill all required fields correctly!');
+      this.complainForm.markAllAsTouched();
+      return;
+    }
+
+    const title = this.sanitizeInput(this.complainForm.value.title);
+    const description = this.sanitizeInput(this.complainForm.value.description);
 
     const payload = {
       driver_cnic: this.complainForm.value.cnic,
@@ -164,30 +181,45 @@ export class DefaultComponent implements OnInit {
       phone_no: this.complainForm.value.phoneNo,
       ev_id: this.complainForm.value.evId,
       driver_image: this.complainForm.value.driverImage,
-      complaint_name: this.complainForm.value.title,
-      description: this.complainForm.value.description,
+      complaint_name: title,
+      description: description,
       type: this.complainForm.value.maintenanceType
     };
 
     this.crmService.postComplaint(payload).subscribe({
-      next: () => { 
-        alert('Complain submitted successfully!'); 
-        this.closeModal(); 
-        this.loadComplaints(); 
+      next: () => {
+        alert('Complain submitted successfully!');
+        this.closeModal();
+        this.loadComplaints();
       },
-      error: (err) => { console.error('Error submitting complain:', err); }
+      error: (err) => {
+        console.error('Error submitting complain:', err);
+      }
     });
   }
 
-  /** ---------------- INLINE ROW EDIT ---------------- */
-  editRow(index: number) { this.editIndex = index; }
-  cancelEdit() { this.editIndex = null; this.loadComplaints(); }
+  /** ---------------- INLINE EDIT ---------------- */
+  editRow(index: number) {
+    this.editIndex = index;
+  }
+
+  cancelEdit() {
+    this.editIndex = null;
+    this.loadComplaints();
+  }
 
   saveRow(order: any) {
     const apiUrl = `http://203.135.63.46:5000/neubolt/crm/put-complaints/${order.complaint_id}`;
     this.http.put(apiUrl, order).subscribe({
-      next: () => { alert('Complaint updated successfully!'); this.editIndex = null; this.loadComplaints(); },
-      error: (err) => { console.error('Error updating complaint:', err); alert('Failed to update complaint'); }
+      next: () => {
+        alert('Complaint updated successfully!');
+        this.editIndex = null;
+        this.loadComplaints();
+      },
+      error: (err) => {
+        console.error('Error updating complaint:', err);
+        alert('Failed to update complaint');
+      }
     });
   }
 
@@ -195,20 +227,27 @@ export class DefaultComponent implements OnInit {
   sortTable(column: string) {
     const config = this.sortConfig.find(c => c.column === column);
     if (config) {
-      // toggle asc / desc
-      config.direction = config.direction === 'asc' ? 'desc' : (config.direction === 'desc' ? '' : 'asc');
+      config.direction =
+        config.direction === 'asc' ? 'desc' : config.direction === 'desc' ? '' : 'asc';
     }
     this.applySorting();
   }
 
   applySorting() {
     const activeSort = this.sortConfig.find(c => c.direction !== '');
-    if (!activeSort) { this.setPage(1); return; }
+    if (!activeSort) {
+      this.setPage(1);
+      return;
+    }
 
     const { column, direction } = activeSort;
     this.complaints.sort((a: any, b: any) => {
-      let valA = a[column], valB = b[column];
-      if (column.includes('time')) { valA = new Date(valA).getTime(); valB = new Date(valB).getTime(); }
+      let valA = a[column],
+        valB = b[column];
+      if (column.includes('time')) {
+        valA = new Date(valA).getTime();
+        valB = new Date(valB).getTime();
+      }
       if (typeof valA === 'string') valA = valA.toLowerCase();
       if (typeof valB === 'string') valB = valB.toLowerCase();
       if (valA < valB) return direction === 'asc' ? -1 : 1;
@@ -221,7 +260,7 @@ export class DefaultComponent implements OnInit {
 
   getSortIcon(column: string): string {
     const config = this.sortConfig.find(c => c.column === column);
-    if (!config || config.direction === '') return '↕'; // default unsorted icon
+    if (!config || config.direction === '') return '↕';
     return config.direction === 'asc' ? '↑' : '↓';
   }
 }

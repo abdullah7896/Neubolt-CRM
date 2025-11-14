@@ -1,15 +1,20 @@
 .container {
   font-family: Arial, sans-serif;
+  max-width: 100%;
+  padding: 0 15px; // Responsive padding
 }
 
 .card {
   border-radius: 10px;
+  overflow: hidden; // Ensure rounded corners clip content
 }
 
 .table {
   border-radius: 8px;
   overflow: hidden;
+  margin-bottom: 0; // Remove default margin for better spacing
 }
+
 .button {
   color: #62AC4B;      /* Text color */
   background-color: transparent; /* Optional: background */
@@ -19,6 +24,7 @@
   text-decoration: none; /* Remove underline if it's a link */
   cursor: pointer;
   transition: all 0.3s ease; /* Smooth hover transition */
+  white-space: nowrap; // Prevent text wrap on small screens
 }
 
 .button:hover {
@@ -26,6 +32,7 @@
   background-color: #62AC4B;
   border-color: #62AC4B;
 }
+
 .btn-custom-green {
   background-color: #62AC4B;
   color: white;
@@ -36,6 +43,7 @@
     color: white;
   }
 }
+
 .upload-box {
   border: 2px dashed #6c757d;
   border-radius: 10px;
@@ -53,7 +61,6 @@
   color: #28a745;
 }
 
-
 .pagination {
   justify-content: center; /* center align */
   margin-top: 20px;
@@ -67,6 +74,7 @@
   border-radius: 5px;
   margin: 0 3px;
   transition: all 0.3s;
+  padding: 0.5rem 0.75rem; // Consistent padding
 }
 
 /* Hover effect */
@@ -87,4 +95,228 @@
 .page-item.disabled .page-link {
   color: #ccc;
   border-color: #ddd;
+}
+
+/* Search Bar Responsiveness */
+.d-flex.gap-2 {
+  flex-direction: row; // Default row for desktop
+  gap: 0.5rem;
+}
+
+.form-control {
+  flex: 1; // Allow search input to take available space
+}
+
+/* Table Responsiveness: Make horizontally scrollable on small screens */
+.card {
+  overflow-x: auto; // Enable horizontal scroll for table on mobile
+}
+
+.table {
+  min-width: 600px; // Minimum width to prevent extreme compression
+}
+
+.table th,
+.table td {
+  white-space: nowrap; // Prevent text wrapping in cells
+  padding: 0.75rem 0.5rem; // Reduce padding on mobile for compactness
+}
+
+/* Modal Responsiveness */
+.modal-dialog {
+  max-width: 90vw; // Full width on very small screens
+  margin: 1.75rem auto; // Consistent margins
+}
+
+.modal-dialog.modal-lg {
+  max-width: 800px; // Cap at lg on desktop
+}
+
+.modal-content {
+  border-radius: 10px;
+}
+
+.modal-body p {
+  margin-bottom: 0.5rem;
+  word-break: break-word; // Break long words like CNIC numbers
+}
+
+/* Register Modal Form Responsiveness */
+// .row.g-3 {
+  
+// }
+
+.col-md-6 {
+  margin-bottom: 1rem; // Extra spacing on stack
+}
+
+.form-control,
+input[type="file"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-label {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+/* File Upload Section: Stack and full width on mobile */
+// .mt-4 {
+  
+// }
+
+/* Button in Modals: Ensure full width on mobile if needed */
+.modal-footer .btn {
+  flex: 1;
+  margin: 0 0.25rem; // Space between buttons
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* Pagination on Mobile: Reduce size and spacing */
+@media (max-width: 576px) {
+  .pagination .page-link {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    margin: 0 1px;
+  }
+  
+  .page-item:not(:first-child):not(:last-child) {
+    display: none; // Hide middle pages on very small screens, show only first, prev/next, last
+  }
+  
+  .page-item:first-child .page-link::after {
+    content: "..."; // Indicate hidden pages
+    margin-left: 0.5rem;
+  }
+}
+
+/* General Mobile Adjustments (up to 768px for tablets) */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 10px;
+  }
+  
+  .d-flex.justify-content-between.align-items-center {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .btn.button {
+    align-self: flex-end;
+    width: auto;
+    justify-content: center;
+  }
+  
+  .table th,
+  .table td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.875rem; // Smaller font on mobile
+  }
+  
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: 95vw;
+  }
+  
+  .modal-content {
+    border-radius: 0; // Flat on mobile for full screen feel
+  }
+  
+  .d-flex.gap-2 {
+    flex-direction: column; // Stack search and clear on mobile
+  }
+  
+  .btn-outline-secondary {
+    width: 100%;
+  }
+  
+  .upload-box {
+    padding: 15px; // Reduce padding on mobile
+  }
+  
+  .row.g-3 .col-md-6 {
+    margin-bottom: 1.5rem; // More spacing when stacked
+  }
+  
+  .mt-4 {
+    margin-top: 1.5rem !important;
+  }
+}
+
+/* Extra Small Devices (under 576px) */
+@media (max-width: 576px) {
+  h2.fw-bold {
+    font-size: 1.5rem; // Smaller heading
+  }
+  
+  h4.mb-0 {
+    font-size: 1.25rem;
+  }
+  
+  .table {
+    min-width: 500px; // Slightly smaller min-width for tiny screens
+  }
+  
+  .modal-header h5.modal-title {
+    font-size: 1.125rem;
+  }
+  
+  .modal-body p {
+    font-size: 0.9rem;
+  }
+  
+  .form-control,
+  input[type="file"] {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+  }
+  
+  .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Landscape Mobile Adjustments */
+@media (max-width: 768px) and (orientation: landscape) {
+  .modal-dialog {
+    max-height: 90vh;
+    margin: 0.5rem auto;
+  }
+  
+  .modal-content {
+    max-height: 100%;
+    overflow-y: auto;
+  }
+}
+
+/* Ensure table headers don't wrap */
+.table th {
+  position: sticky;
+  top: 0;
+  background-color: #f8f9fa; // Sticky header background
+  z-index: 10;
+}
+
+.table thead th {
+  border-bottom: 2px solid #dee2e6; // Stronger border for visibility
+}
+
+/* Hover effects for table rows (disable on touch devices) */
+.table-hover tbody tr:hover {
+  background-color: rgba(98, 172, 75, 0.1); // Light green hover
+}
+
+@media (hover: none) {
+  .table-hover tbody tr:hover {
+    background-color: transparent; // No hover on mobile
+  }
 }

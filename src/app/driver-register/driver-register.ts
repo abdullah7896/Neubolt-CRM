@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { FormsModule } from '@angular/forms'; // for [(ngModel)]
+import { FormsModule } from '@angular/forms';
+import { DomSanitizer } from '@angular/platform-browser';
 import { CrmService } from 'src/app/services/crm.service';
 
 @Component({
@@ -25,16 +26,21 @@ export class DriverRegister implements OnInit {
   driverForm: FormGroup;
   selectedDriver: any = null;
   uploadedFiles: { [key: string]: string } = {};
+  imageErrors: { [key: string]: string } = {};
 
   sortConfig: { column: string; direction: 'asc' | 'desc' }[] = [];
 
-  constructor(private fb: FormBuilder, private crm: CrmService) {
+  constructor(
+    private fb: FormBuilder,
+    private crm: CrmService,
+    private sanitizer: DomSanitizer
+  ) {
     this.driverForm = this.fb.group({
-      name: ['', Validators.required],
+      name: ['', [Validators.required, Validators.pattern(/^[a-zA-Z\s]+$/)]],
       contact_number: ['', [Validators.required, Validators.pattern(/^[0-9]{11}$/)]],
       dob: ['', Validators.required],
-      current_address: ['', Validators.required],
-      allocated_rikshaw: [''],
+      current_address: ['', [Validators.required, Validators.minLength(5)]],
+      allocated_rikshaw: ['', [Validators.required, Validators.pattern(/^RK\d{3}$/)]],
       cnic_number: ['', [Validators.required, Validators.pattern(/^[0-9]{13}$/)]]
     });
   }
@@ -53,9 +59,16 @@ export class DriverRegister implements OnInit {
     });
   }
 
-  /** -------------------- SEARCH -------------------- **/
+  sanitizeInput(value: string): string {
+    if (!value) return '';
+    const temp = document.createElement('div');
+    temp.textContent = value;
+    return temp.innerHTML.trim();
+  }
+
+  /** SEARCH **/
   applySearch() {
-    const query = this.searchQuery.trim().toLowerCase();
+    const query = this.sanitizeInput(this.searchQuery.trim().toLowerCase());
     if (query) {
       this.filteredData = this.evData.filter(ev =>
         (ev.allocated_rikshaw && ev.allocated_rikshaw.toString().toLowerCase().includes(query)) ||
@@ -74,22 +87,26 @@ export class DriverRegister implements OnInit {
     this.applySearch();
   }
 
+  /** SUBMIT **/
   onSubmit() {
     if (!this.driverForm.valid) {
       alert('⚠️ Please fill all required fields correctly!');
       return;
     }
 
-    const driverData = {
-      ...this.driverForm.value,
-      ...this.uploadedFiles
-    };
+    const sanitizedData: any = {};
+    Object.keys(this.driverForm.value).forEach(key => {
+      sanitizedData[key] = this.sanitizeInput(this.driverForm.value[key]);
+    });
+
+    const driverData = { ...sanitizedData, ...this.uploadedFiles };
 
     this.crm.postDriver(driverData).subscribe({
       next: () => {
         alert('✅ Driver Registered Successfully');
         this.driverForm.reset();
         this.uploadedFiles = {};
+        this.imageErrors = {};
         this.loadDrivers();
       },
       error: (err) => {
@@ -99,17 +116,35 @@ export class DriverRegister implements OnInit {
     });
   }
 
+  /** FILE UPLOAD **/
   onFileSelect(event: any, field: string) {
     const file = event.target.files[0];
+    this.imageErrors[field] = '';
+
     if (file) {
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+      const maxSize = 5 * 1024 * 1024; // 5 MB
+
+      if (!allowedTypes.includes(file.type)) {
+        this.imageErrors[field] = '⚠️ Only JPG, JPEG, or PNG files are allowed!';
+        return;
+      }
+
+      if (file.size > maxSize) {
+        this.imageErrors[field] = '⚠️ File size must be less than 5 MB!';
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = () => {
-        this.uploadedFiles[field] = reader.result as string;
+        const result = reader.result as string;
+        this.uploadedFiles[field] = this.sanitizer.bypassSecurityTrustUrl(result) as string;
       };
       reader.readAsDataURL(file);
     }
   }
 
+  /** PAGINATION **/
   setPage(page: number) {
     if (page < 1) page = 1;
     if (page > this.totalPages) page = this.totalPages;
@@ -120,6 +155,7 @@ export class DriverRegister implements OnInit {
     this.paginatedData = this.filteredData.slice(start, end);
   }
 
+  /** SORTING **/
   sortTable(column: string) {
     const existing = this.sortConfig.find(s => s.column === column);
     if (existing) {

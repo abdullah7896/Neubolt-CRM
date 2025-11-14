@@ -22,65 +22,84 @@
           </div>
 
           <div class="modal-body">
-            <form [formGroup]="complainForm">
-              <!-- CNIC Input -->
-              <div class="mb-3">
-                <label for="cnic" class="form-label">Enter CNIC No of Driver</label>
-                <div class="input-group">
-                  <input type="text" class="form-control" id="cnic" formControlName="cnic" placeholder="XXXXX-XXXXXXX-X">
-                  <button class="btn button" type="button" (click)="verifyCNIC()">Verify</button>
-                  <button class="btn btn-secondary" type="button" (click)="refreshForm()">Refresh</button>
-                </div>
-                <small *ngIf="noDataFound" class="text-danger">No data found for this CNIC. Please fill manually.</small>
-              </div>
+            <form [formGroup]="complainForm" (ngSubmit)="submitComplain()">
+  <!-- CNIC Input -->
+  <div class="mb-3">
+    <label for="cnic" class="form-label">Enter CNIC No of Driver</label>
+    <div class="input-group">
+      <input type="text" class="form-control" id="cnic" formControlName="cnic"
+        placeholder="XXXXX-XXXXXXX-X" maxlength="15" />
+      <button class="btn button" type="button" (click)="verifyCNIC()">Verify</button>
+      <button class="btn btn-secondary" type="button" (click)="refreshForm()">Refresh</button>
+    </div>
+    <small *ngIf="complainForm.get('cnic')?.invalid && complainForm.get('cnic')?.touched" class="text-danger">
+      Please enter a valid CNIC (XXXXX-XXXXXXX-X).
+    </small>
+    <small *ngIf="noDataFound" class="text-danger">No data found for this CNIC. Please fill manually.</small>
+  </div>
 
-              <!-- Driver Info -->
-              <div class="row mb-3">
-                <div class="col-md-4">
-                  <label class="form-label">Driver Name</label>
-                  <input type="text" class="form-control" formControlName="driverName">
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label">Phone No</label>
-                  <input type="text" class="form-control" formControlName="phoneNo">
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label">EV-Id</label>
-                  <input type="text" class="form-control" formControlName="evId">
-                </div>
-              </div>
+  <!-- Driver Info -->
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <label class="form-label">Driver Name</label>
+      <input type="text" class="form-control" formControlName="driverName" />
+      <small *ngIf="complainForm.get('driverName')?.invalid && complainForm.get('driverName')?.touched"
+        class="text-danger">Valid name required.</small>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Phone No</label>
+      <input type="text" class="form-control" formControlName="phoneNo" />
+      <small *ngIf="complainForm.get('phoneNo')?.invalid && complainForm.get('phoneNo')?.touched"
+        class="text-danger">Enter a valid phone number.</small>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">EV-Id</label>
+      <input type="text" class="form-control" formControlName="evId" />
+      <small *ngIf="complainForm.get('evId')?.invalid && complainForm.get('evId')?.touched"
+        class="text-danger">EV ID required.</small>
+    </div>
+  </div>
 
-              <!-- Additional Driver Details -->
-              <div *ngIf="driverDetails" class="row mb-3">
-                <div class="col-md-4">
-                  <label class="form-label">Current Address</label>
-                  <input type="text" class="form-control" [value]="driverDetails.address">
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label">Driver Image</label>
-                  <img *ngIf="driverDetails.driverImage" [src]="driverDetails.driverImage" class="img-fluid rounded">
-                </div>
-              </div>
+  <!-- Additional Driver Details -->
+  <div *ngIf="driverDetails" class="row mb-3">
+    <div class="col-md-4">
+      <label class="form-label">Current Address</label>
+      <input type="text" class="form-control" [value]="driverDetails.address" readonly />
+    </div>
+    <div class="col-md-4">
+      <label class="form-label">Driver Image</label>
+      <img *ngIf="driverDetails.driverImage" [src]="driverDetails.driverImage"
+        class="img-fluid rounded border" width="120" />
+    </div>
+  </div>
 
-              <!-- Title & Description -->
-              <div class="mb-3">
-                <label for="title" class="form-label">Title*</label>
-                <input type="text" class="form-control" id="title" formControlName="title" placeholder="Complain title">
-              </div>
-              <div class="mb-3">
-                <label for="description" class="form-label">Description*</label>
-                <textarea class="form-control" id="description" formControlName="description" rows="4"
-                  placeholder="Describe your complain"></textarea>
-              </div>
+  <!-- Title & Description -->
+  <div class="mb-3">
+    <label for="title" class="form-label">Title*</label>
+    <input type="text" class="form-control" id="title" formControlName="title" placeholder="Complain title" />
+    <small *ngIf="complainForm.get('title')?.invalid && complainForm.get('title')?.touched"
+      class="text-danger">Title is required (max 100 chars).</small>
+  </div>
 
-              <!-- Complain Type -->
-              <div class="mb-3">
-                <label for="maintenanceType" class="form-label">Type of Complain</label>
-                <select class="form-select" formControlName="maintenanceType">
-                  <option *ngFor="let type of complainTypes" [value]="type">{{ type }}</option>
-                </select>
-              </div>
-            </form>
+  <div class="mb-3">
+    <label for="description" class="form-label">Description*</label>
+    <textarea class="form-control" id="description" formControlName="description" rows="4"
+      placeholder="Describe your complaint"></textarea>
+    <small *ngIf="complainForm.get('description')?.invalid && complainForm.get('description')?.touched"
+      class="text-danger">Description is required (max 500 chars).</small>
+  </div>
+
+  <!-- Complain Type -->
+  <div class="mb-3">
+    <label for="maintenanceType" class="form-label">Type of Complain</label>
+    <select class="form-select" formControlName="maintenanceType">
+      <option *ngFor="let type of complainTypes" [value]="type">{{ type }}</option>
+    </select>
+  </div>
+
+  <!-- <button class="btn btn-success" type="submit">Submit Complaint</button> -->
+</form>
+
           </div>
 
           <div class="modal-footer border-0">
@@ -102,7 +121,8 @@
               <th (click)="sortTable('status')">Status {{ getSortIcon('status') }}</th>
               <th (click)="sortTable('driver_name')">Driver Name {{ getSortIcon('driver_name') }}</th>
               <th (click)="sortTable('type')">Maintenance Type {{ getSortIcon('type') }}</th>
-              <th (click)="sortTable('complaint_register_time')">Complain Date {{ getSortIcon('complaint_register_time') }}</th>
+              <th (click)="sortTable('complaint_register_time')">Complain Date {{ getSortIcon('complaint_register_time')
+                }}</th>
               <th (click)="sortTable('driver_cnic')">Driver CNIC {{ getSortIcon('driver_cnic') }}</th>
               <th (click)="sortTable('status_change_time')">Status Updated {{ getSortIcon('status_change_time') }}</th>
               <th (click)="sortTable('ev_id')">EV Id {{ getSortIcon('ev_id') }}</th>
@@ -141,11 +161,12 @@
                 <td>{{ order.complaint_name }}</td>
                 <td>{{ order.complaint_id }}</td>
                 <td>
-                  <span class="badge"
-                        [ngClass]="{
+                  <span class="badge" [ngClass]="{
                           'bg-warning text-dark': order.status === 'Pending',
                           'bg-success': order.status === 'Completed',
-                          'bg-danger': order.status === 'In-Progress'
+                          'bg-danger': order.status === 'In-Progress',
+                          'bg-secondary': order.status === 'Requested'
+                          
                         }">
                     {{ order.status }}
                   </span>
@@ -176,8 +197,8 @@
             <a class="page-link" (click)="setPage(currentPage - 1)">Previous</a>
           </li>
 
-          <li class="page-item" *ngFor="let page of [].constructor(totalPages); let i = index" 
-              [class.active]="currentPage === (i + 1)">
+          <li class="page-item" *ngFor="let page of [].constructor(totalPages); let i = index"
+            [class.active]="currentPage === (i + 1)">
             <a class="page-link" (click)="setPage(i + 1)">{{ i + 1 }}</a>
           </li>
 
