@@ -30,9 +30,9 @@
   border-radius: 50%;
 }
 .button {
-  color: #62AC4B;      /* Text color */
+  color: #0fa958;      /* Text color */
   background-color: transparent; /* Optional: background */
-  border: 1px solid #62AC4B;    /* Optional: border */
+  border: 1px solid #0fa958;    /* Optional: border */
   padding: 6px 12px;   /* Optional: spacing */
   border-radius: 4px;  /* Optional: rounded corners */
   text-decoration: none; /* Remove underline if it's a link */
@@ -42,16 +42,16 @@
 
 .button:hover {
   color: #ffffff;
-  background-color: #62AC4B;
-  border-color: #62AC4B;
+  background-color: #0fa958;
+  border-color: #0fa958;
 }
 .btn-custom-green {
-  background-color: #62AC4B;
+  background-color: #0fa958;
   color: white;
   border: none;
   
   &:hover {
-    background-color: darken(#62AC4B, 10%);
+    background-color: darken(#0fa958, 10%);
     color: white;
   }
 }
@@ -64,9 +64,9 @@
 
 /* Each page number */
 .page-item .page-link {
-  color: #62AC4B;       /* Text color */
+  color: #0fa958;       /* Text color */
   background-color: #fff; /* Background color */
-  border: 1px solid #62AC4B; /* Border color */
+  border: 1px solid #0fa958; /* Border color */
   border-radius: 5px;
   margin: 0 3px;
   transition: all 0.3s;
@@ -74,16 +74,16 @@
 
 /* Hover effect */
 .page-item .page-link:hover {
-  background-color: #62AC4B;
+  background-color: #0fa958;
   color: #fff;
-  border-color: #62AC4B;
+  border-color: #0fa958;
 }
 
 /* Active page */
 .page-item.active .page-link {
-  background-color: #62AC4B;
+  background-color: #0fa958;
   color: #fff;
-  border-color: #62AC4B;
+  border-color: #0fa958;
 }
 
 /* Disabled page */

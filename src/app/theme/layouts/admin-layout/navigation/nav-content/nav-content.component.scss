@@ -1,8 +1,8 @@
 /* Default button style */
 .button {
-  color: #62AC4B;
+  color: #0fa958;
   background-color: transparent;
-  border: 1px solid #62AC4B;
+  border: 1px solid #0fa958;
   padding: 6px 12px;
   border-radius: 100px;
   text-decoration: none;
@@ -13,13 +13,13 @@
 /* Hover effect */
 .button:hover {
   color: #ffffff;
-  background-color: #62AC4B;
-  border-color: #62AC4B;
+  background-color: #0fa958;
+  border-color: #0fa958;
 }
 
 /* ✅ Active (selected) state */
 .active-btn {
-  background-color: #62AC4B !important;
+  background-color: #0fa958 !important;
   color: #ffffff !important;
-  border-color: #62AC4B !important;
+  border-color: #0fa958 !important;
 }

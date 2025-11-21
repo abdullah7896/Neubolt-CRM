@@ -18,7 +18,7 @@ export class DriverRegister implements OnInit {
   paginatedData: any[] = [];
 
   currentPage = 1;
-  pageSize = 5;
+  pageSize = 10;
   totalPages = 0;
 
   searchQuery: string = '';
