@@ -6,9 +6,9 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class CrmService {
-  private baseAuthUrl = 'http://203.135.63.46:5000/neubolt/auth';
-  private baseUrl = 'http://203.135.63.46:5000/neubolt/crm';
-  private driverUrl = 'http://203.135.63.46:5000/neubolt';
+  private baseAuthUrl = 'http://72.62.183.8:5000/neubolt/auth';
+  private baseUrl = 'http://72.62.183.8:5000/neubolt/crm';
+  private driverUrl = 'http://72.62.183.8:5000/neubolt';
 
   constructor(private http: HttpClient) { }
 
