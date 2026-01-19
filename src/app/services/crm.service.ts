@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
-
+import { environment } from '../../environments/environment';
 @Injectable({
   providedIn: 'root'
 })
 export class CrmService {
-  private baseAuthUrl = 'http://72.62.183.8:5000/neubolt/auth';
-  private baseUrl = 'http://72.62.183.8:5000/neubolt/crm';
-  private driverUrl = 'http://72.62.183.8:5000/neubolt';
+  private baseAuthUrl = 'http://203.135.63.46:5000/neubolt/auth';
+  private baseUrl = 'http://203.135.63.46:5000/neubolt/crm';
+  private driverUrl = 'http://203.135.63.46:5000/neubolt';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // ✅ Get headers with token
   private getAuthHeaders(): HttpHeaders {
