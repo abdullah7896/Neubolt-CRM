@@ -44,7 +44,7 @@ export class DefaultComponent implements OnInit {
     private crmService: CrmService,
     private http: HttpClient,
     private sanitizer: DomSanitizer
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.complainForm = this.fb.group({
@@ -176,9 +176,10 @@ export class DefaultComponent implements OnInit {
     const description = this.sanitizeInput(this.complainForm.value.description);
 
     const payload = {
-      driver_cnic: this.complainForm.value.cnic,
+      driver_cnic: this.complainForm.value.cnic.replace(/-/g, ''), // Strip dashes for DB limit (13 chars)
       driver_name: this.complainForm.value.driverName,
       phone_no: this.complainForm.value.phoneNo,
+      driver_number: this.complainForm.value.phoneNo, // Added to satisfy backend requirement
       ev_id: this.complainForm.value.evId,
       driver_image: this.complainForm.value.driverImage,
       complaint_name: title,
@@ -209,8 +210,12 @@ export class DefaultComponent implements OnInit {
   }
 
   saveRow(order: any) {
-    const apiUrl = `http://203.135.63.46:5000/neubolt/crm/put-complaints/${order.complaint_id}`;
-    this.http.put(apiUrl, order).subscribe({
+    // Sanitize CNIC: remove dashes, take first 13 digits to prevent overflow/duplication bugs
+    if (order.driver_cnic) {
+      order.driver_cnic = order.driver_cnic.toString().replace(/\D/g, '').substring(0, 13);
+    }
+
+    this.crmService.updateComplaint(order.complaint_id, order).subscribe({
       next: () => {
         alert('Complaint updated successfully!');
         this.editIndex = null;

@@ -40,7 +40,7 @@ export class DriverRegister implements OnInit {
       contact_number: ['', [Validators.required, Validators.pattern(/^[0-9]{11}$/)]],
       dob: ['', Validators.required],
       current_address: ['', [Validators.required, Validators.minLength(5)]],
-      allocated_rikshaw: ['', [Validators.required, Validators.pattern(/^RK\d{3}$/)]],
+      allocated_rikshaw: ['', Validators.required],
       cnic_number: ['', [Validators.required, Validators.pattern(/^[0-9]{13}$/)]]
     });
   }
@@ -99,7 +99,13 @@ export class DriverRegister implements OnInit {
       sanitizedData[key] = this.sanitizeInput(this.driverForm.value[key]);
     });
 
-    const driverData = { ...sanitizedData, ...this.uploadedFiles };
+    const driverData = {
+      ...sanitizedData,
+      ...this.uploadedFiles,
+      driver_number: sanitizedData.contact_number, // Map to expected backend key
+      ev_id: sanitizedData.allocated_rikshaw         // Map to expected backend key
+    };
+    console.log('📤 Submitting Driver Data:', driverData);
 
     this.crm.postDriver(driverData).subscribe({
       next: () => {
@@ -138,7 +144,8 @@ export class DriverRegister implements OnInit {
       const reader = new FileReader();
       reader.onload = () => {
         const result = reader.result as string;
-        this.uploadedFiles[field] = this.sanitizer.bypassSecurityTrustUrl(result) as string;
+        // Strip data:image/jpeg;base64, header to send raw base64
+        this.uploadedFiles[field] = result.split(',')[1] || result;
       };
       reader.readAsDataURL(file);
     }
