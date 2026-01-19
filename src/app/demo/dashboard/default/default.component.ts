@@ -48,9 +48,11 @@ export class DefaultComponent implements OnInit {
 
   ngOnInit(): void {
     this.complainForm = this.fb.group({
+      // Validation: Exactly 13 digits when stripped, matches regex for format
       cnic: ['', [Validators.required, Validators.pattern(/^\d{5}-\d{7}-\d{1}$/)]],
       driverName: ['', [Validators.required, Validators.pattern(/^[A-Za-z ]{3,50}$/)]],
-      phoneNo: ['', [Validators.required, Validators.pattern(/^\d{10,12}$/)]],
+      // Backend requires exactly 11 digits
+      phoneNo: ['', [Validators.required, Validators.pattern(/^\d{11}$/)]],
       evId: ['', Validators.required],
       maintenanceType: ['General', Validators.required],
       title: ['', [Validators.required, Validators.maxLength(100)]],
@@ -62,14 +64,23 @@ export class DefaultComponent implements OnInit {
     this.loadComplaints();
   }
 
+  /** --- Helper: Unwrap Angular Sanitizer Objects --- */
+  private getRawImage(img: any): string {
+    if (!img) return '';
+    // Check if the image is the nested object seen in your JSON payload
+    if (img.changingThisBreaksApplicationSecurity) {
+      return img.changingThisBreaksApplicationSecurity;
+    }
+    return img;
+  }
+
   /** ---------------- LOAD COMPLAINTS ---------------- */
   loadComplaints() {
     this.loading = true;
     this.crmService.getComplaints().subscribe({
       next: (res: any) => {
         this.complaints = Array.isArray(res.complaints) ? res.complaints : [];
-        this.totalPages = Math.ceil(this.complaints.length / this.pageSize);
-        this.setPage(1);
+        this.applySorting(); // Sort before calculating pagination
         this.loading = false;
       },
       error: (err) => {
@@ -82,8 +93,9 @@ export class DefaultComponent implements OnInit {
 
   /** ---------------- PAGINATION ---------------- */
   setPage(page: number) {
+    this.totalPages = Math.ceil(this.complaints.length / this.pageSize);
     if (page < 1) page = 1;
-    if (page > this.totalPages) page = this.totalPages;
+    if (page > this.totalPages && this.totalPages > 0) page = this.totalPages;
     this.currentPage = page;
 
     const start = (page - 1) * this.pageSize;
@@ -112,9 +124,10 @@ export class DefaultComponent implements OnInit {
       return;
     }
 
+    // Strip dashes to match backend 13-digit requirement
     const digitsOnlyCNIC = cnic.replace(/-/g, '');
-    if (digitsOnlyCNIC.length !== 13 || !/^\d+$/.test(digitsOnlyCNIC)) {
-      alert('Please enter a valid 13-digit CNIC.');
+    if (digitsOnlyCNIC.length !== 13) {
+      alert('Please enter a valid 13-digit CNIC (XXXXX-XXXXXXX-X).');
       return;
     }
 
@@ -125,27 +138,22 @@ export class DefaultComponent implements OnInit {
             driverName: res.name || '',
             phoneNo: res.contact_number || '',
             evId: res.allocated_rikshaw || '',
-            driverImage: res.driver_image || ''
+            // Ensure we extract the string from any Sanitizer object
+            driverImage: this.getRawImage(res.driver_image)
           });
           this.driverDetails = {
-            driverImage: res.driver_image || '',
+            driverImage: this.getRawImage(res.driver_image),
             address: res.current_address || '',
           };
           this.noDataFound = false;
         } else {
-          this.complainForm.patchValue({
-            driverName: '',
-            phoneNo: '',
-            evId: '',
-            driverImage: ''
-          });
-          this.driverDetails = null;
+          this.refreshForm();
           this.noDataFound = true;
         }
       },
       error: (err) => {
         console.error('Error fetching driver info:', err);
-        alert('Error fetching driver info');
+        this.noDataFound = true;
       }
     });
   }
@@ -159,6 +167,7 @@ export class DefaultComponent implements OnInit {
 
   /** ---------------- SANITIZATION ---------------- */
   sanitizeInput(value: string): string {
+    if (!value) return '';
     const div = document.createElement('div');
     div.innerText = value;
     return div.innerHTML.trim();
@@ -172,29 +181,31 @@ export class DefaultComponent implements OnInit {
       return;
     }
 
-    const title = this.sanitizeInput(this.complainForm.value.title);
-    const description = this.sanitizeInput(this.complainForm.value.description);
-
     const payload = {
-      driver_cnic: this.complainForm.value.cnic.replace(/-/g, ''), // Strip dashes for DB limit (13 chars)
+      // Clean 13 digits
+      driver_cnic: this.complainForm.value.cnic.replace(/-/g, '').substring(0, 13), 
       driver_name: this.complainForm.value.driverName,
+      // Use both keys to ensure backend compatibility
+      driver_number: this.complainForm.value.phoneNo, 
       phone_no: this.complainForm.value.phoneNo,
-      driver_number: this.complainForm.value.phoneNo, // Added to satisfy backend requirement
       ev_id: this.complainForm.value.evId,
-      driver_image: this.complainForm.value.driverImage,
-      complaint_name: title,
-      description: description,
+      // Unwrap base64 string
+      driver_image: this.getRawImage(this.complainForm.value.driverImage), 
+      complaint_name: this.sanitizeInput(this.complainForm.value.title),
+      description: this.sanitizeInput(this.complainForm.value.description),
       type: this.complainForm.value.maintenanceType
     };
 
     this.crmService.postComplaint(payload).subscribe({
       next: () => {
-        alert('Complain submitted successfully!');
+        alert('Complaint submitted successfully!');
         this.closeModal();
         this.loadComplaints();
       },
       error: (err) => {
-        console.error('Error submitting complain:', err);
+        console.error('Error submitting complaint:', err);
+        const errorMsg = err.error?.error || 'System internal error. Check Base64 image size.';
+        alert(errorMsg);
       }
     });
   }
@@ -210,7 +221,7 @@ export class DefaultComponent implements OnInit {
   }
 
   saveRow(order: any) {
-    // Sanitize CNIC: remove dashes, take first 13 digits to prevent overflow/duplication bugs
+    // Ensure CNIC is cleaned for updates
     if (order.driver_cnic) {
       order.driver_cnic = order.driver_cnic.toString().replace(/\D/g, '').substring(0, 13);
     }
@@ -249,12 +260,15 @@ export class DefaultComponent implements OnInit {
     this.complaints.sort((a: any, b: any) => {
       let valA = a[column],
         valB = b[column];
+      
       if (column.includes('time')) {
-        valA = new Date(valA).getTime();
-        valB = new Date(valB).getTime();
+        valA = valA ? new Date(valA).getTime() : 0;
+        valB = valB ? new Date(valB).getTime() : 0;
       }
+      
       if (typeof valA === 'string') valA = valA.toLowerCase();
       if (typeof valB === 'string') valB = valB.toLowerCase();
+      
       if (valA < valB) return direction === 'asc' ? -1 : 1;
       if (valA > valB) return direction === 'asc' ? 1 : -1;
       return 0;
