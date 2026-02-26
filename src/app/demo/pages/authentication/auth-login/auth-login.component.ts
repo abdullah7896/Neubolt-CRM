@@ -17,7 +17,7 @@ export class AuthLoginComponent {
   errorMessage: string = '';
   loading: boolean = false;
 
-  constructor(private crmService: CrmService, private router: Router) {}
+  constructor(private crmService: CrmService, private router: Router) { }
 
   onLogin() {
     if (!this.email || !this.password) {
@@ -36,9 +36,7 @@ export class AuthLoginComponent {
         console.log('✅ Login success:', response);
         this.loading = false;
 
-        // Save token
-        localStorage.setItem('authToken', response.access_token || '');
-        localStorage.setItem('userRole', response.role || '');
+        // Token is already saved by CrmService.login()
 
         // Redirect
         this.router.navigate(['/dashboard/default']);
@@ -46,7 +44,7 @@ export class AuthLoginComponent {
       error: (err) => {
         console.error('❌ Login failed:', err);
         this.loading = false;
-        this.errorMessage = err?.error?.message || 'Invalid credentials. Please try again.';
+        this.errorMessage = err?.error?.detail || 'Invalid credentials. Please try again.';
       }
     });
   }

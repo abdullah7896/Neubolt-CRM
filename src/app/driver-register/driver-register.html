@@ -11,13 +11,8 @@
 
     <!-- 🔹 Search Bar -->
     <div class="mb-3 d-flex gap-2">
-      <input
-        type="text"
-        class="form-control"
-        placeholder="Search by EV ID or Driver ID..."
-        [(ngModel)]="searchQuery"
-        (input)="applySearch()"
-      />
+      <input type="text" class="form-control" placeholder="Search by EV ID or Driver ID..." [(ngModel)]="searchQuery"
+        (input)="applySearch()" />
       <button class="btn btn-outline-secondary" (click)="clearSearch()">Clear</button>
     </div>
 
@@ -25,27 +20,22 @@
     <table class="table table-bordered table-hover text-center align-middle">
       <thead class="table-light">
         <tr>
-          <th (click)="sortTable('driver_id')">Driver-ID {{ getSortIcon('driver_id') }}</th>
+          <th (click)="sortTable('dr_id')">Driver CNIC {{ getSortIcon('dr_id') }}</th>
           <th (click)="sortTable('name')">Driver Name {{ getSortIcon('name') }}</th>
-          <th (click)="sortTable('contact_number')">Contact No {{ getSortIcon('contact_number') }}</th>
-          <th (click)="sortTable('allocated_rikshaw')">Allocated Ev Id {{ getSortIcon('allocated_rikshaw') }}</th>
-          <th (click)="sortTable('cnic_number')">CNIC {{ getSortIcon('cnic_number') }}</th>
+          <th (click)="sortTable('contact_no')">Contact No {{ getSortIcon('contact_no') }}</th>
+          <th (click)="sortTable('ev_id')">Allocated EV Id {{ getSortIcon('ev_id') }}</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let ev of paginatedData"
-            (click)="openDetails(ev)"
-            data-bs-toggle="modal"
-            data-bs-target="#driverDetailModal"
-            style="cursor:pointer">
-          <td>{{ ev.evId || ev.driver_id }}</td>
+        <tr *ngFor="let ev of paginatedData" (click)="openDetails(ev)" data-bs-toggle="modal"
+          data-bs-target="#driverDetailModal" style="cursor:pointer">
+          <td>{{ ev.dr_id }}</td>
           <td>{{ ev.name }}</td>
-          <td>{{ ev.contact_number }}</td>
-          <td>{{ ev.allocated_rikshaw }}</td>
-          <td>{{ ev.cnic_number }}</td>
+          <td>{{ ev.contact_no }}</td>
+          <td>{{ ev.ev_id }}</td>
         </tr>
         <tr *ngIf="filteredData.length === 0">
-          <td colspan="5" class="text-center text-muted">No data found.</td>
+          <td colspan="4" class="text-center text-muted">No data found.</td>
         </tr>
       </tbody>
     </table>
@@ -78,11 +68,12 @@
       </div>
 
       <div class="modal-body" *ngIf="selectedDriver">
-        <p><strong>Driver ID:</strong> {{ selectedDriver.evId || selectedDriver.driver_id }}</p>
+        <p><strong>Driver CNIC:</strong> {{ selectedDriver.dr_id }}</p>
         <p><strong>Name:</strong> {{ selectedDriver.name }}</p>
-        <p><strong>Contact:</strong> {{ selectedDriver.contact_number }}</p>
-        <p><strong>Allocated EV:</strong> {{ selectedDriver.allocated_rikshaw }}</p>
-        <p><strong>CNIC:</strong> {{ selectedDriver.cnic_number }}</p>
+        <p><strong>Contact:</strong> {{ selectedDriver.contact_no }}</p>
+        <p><strong>Allocated EV:</strong> {{ selectedDriver.ev_id }}</p>
+        <p><strong>City:</strong> {{ selectedDriver.city }}</p>
+        <p><strong>Address:</strong> {{ selectedDriver.current_address }}</p>
       </div>
 
       <div class="modal-footer">
@@ -106,8 +97,7 @@
           <div class="row g-3">
             <!-- Full Name -->
             <div class="col-md-6">
-              <input type="text" class="form-control"
-                     formControlName="name" placeholder="Full Name" />
+              <input type="text" class="form-control" formControlName="name" placeholder="Full Name" />
               <small class="text-danger" *ngIf="driverForm.get('name')?.invalid && driverForm.get('name')?.touched">
                 Only letters allowed
               </small>
@@ -115,9 +105,10 @@
 
             <!-- Contact Number -->
             <div class="col-md-6">
-              <input type="text" class="form-control"
-                     formControlName="contact_number" placeholder="Contact Number (11 digits)" maxlength="11" />
-              <small class="text-danger" *ngIf="driverForm.get('contact_number')?.invalid && driverForm.get('contact_number')?.touched">
+              <input type="text" class="form-control" formControlName="contact_no"
+                placeholder="Contact Number (11 digits)" maxlength="11" />
+              <small class="text-danger"
+                *ngIf="driverForm.get('contact_no')?.invalid && driverForm.get('contact_no')?.touched">
                 Must be 11 digits
               </small>
             </div>
@@ -132,23 +123,25 @@
 
             <!-- Current Address -->
             <div class="col-md-6">
-              <input type="text" class="form-control"
-                     formControlName="current_address" placeholder="Current Address" />
-              <small class="text-danger" *ngIf="driverForm.get('current_address')?.invalid && driverForm.get('current_address')?.touched">
+              <input type="text" class="form-control" formControlName="current_address" placeholder="Current Address" />
+              <small class="text-danger"
+                *ngIf="driverForm.get('current_address')?.invalid && driverForm.get('current_address')?.touched">
                 Address must be at least 5 characters
               </small>
             </div>
           </div>
 
-          <!-- Allocated Rikshaw ID & CNIC -->
+          <!-- Allocated EV ID & CNIC -->
           <div class="mt-4">
-            <input type="text" class="form-control mb-2" placeholder="Allocated Rikshaw ID (e.g. RK005)" formControlName="allocated_rikshaw" />
-            <small class="text-danger" *ngIf="driverForm.get('allocated_rikshaw')?.invalid && driverForm.get('allocated_rikshaw')?.touched">
-              Format must be like RK005
+            <input type="text" class="form-control mb-2" placeholder="Allocated EV ID (e.g. RK005)"
+              formControlName="ev_id" />
+            <small class="text-danger" *ngIf="driverForm.get('ev_id')?.invalid && driverForm.get('ev_id')?.touched">
+              EV ID is required
             </small>
 
-            <input type="text" class="form-control" formControlName="cnic_number" placeholder="Enter 13 Digit CNIC" maxlength="13" />
-            <small class="text-danger" *ngIf="driverForm.get('cnic_number')?.invalid && driverForm.get('cnic_number')?.touched">
+            <input type="text" class="form-control" formControlName="dr_id" placeholder="Enter 13 Digit CNIC"
+              maxlength="13" />
+            <small class="text-danger" *ngIf="driverForm.get('dr_id')?.invalid && driverForm.get('dr_id')?.touched">
               CNIC must be 13 digits
             </small>
           </div>
@@ -160,20 +153,21 @@
             <small class="text-danger" *ngIf="imageErrors['driver_image']">{{ imageErrors['driver_image'] }}</small>
 
             <label class="form-label">CNIC Front</label>
-            <input type="file" class="form-control mb-2" (change)="onFileSelect($event, 'cnic_front_image')" />
-            <small class="text-danger" *ngIf="imageErrors['cnic_front_image']">{{ imageErrors['cnic_front_image'] }}</small>
+            <input type="file" class="form-control mb-2" (change)="onFileSelect($event, 'cnic_front')" />
+            <small class="text-danger" *ngIf="imageErrors['cnic_front']">{{ imageErrors['cnic_front'] }}</small>
 
             <label class="form-label">CNIC Back</label>
-            <input type="file" class="form-control mb-2" (change)="onFileSelect($event, 'cnic_back_image')" />
-            <small class="text-danger" *ngIf="imageErrors['cnic_back_image']">{{ imageErrors['cnic_back_image'] }}</small>
+            <input type="file" class="form-control mb-2" (change)="onFileSelect($event, 'cnic_back')" />
+            <small class="text-danger" *ngIf="imageErrors['cnic_back']">{{ imageErrors['cnic_back'] }}</small>
 
             <label class="form-label">License Image</label>
-            <input type="file" class="form-control mb-2" (change)="onFileSelect($event, 'license_image')" />
-            <small class="text-danger" *ngIf="imageErrors['license_image']">{{ imageErrors['license_image'] }}</small>
+            <input type="file" class="form-control mb-2" (change)="onFileSelect($event, 'linsence_img')" />
+            <small class="text-danger" *ngIf="imageErrors['linsence_img']">{{ imageErrors['linsence_img'] }}</small>
 
             <label class="form-label">Criminal Record Image</label>
-            <input type="file" class="form-control" (change)="onFileSelect($event, 'criminal_record_image')" />
-            <small class="text-danger" *ngIf="imageErrors['criminal_record_image']">{{ imageErrors['criminal_record_image'] }}</small>
+            <input type="file" class="form-control" (change)="onFileSelect($event, 'criminal_record_img')" />
+            <small class="text-danger" *ngIf="imageErrors['criminal_record_img']">{{ imageErrors['criminal_record_img']
+              }}</small>
           </div>
         </div>
 

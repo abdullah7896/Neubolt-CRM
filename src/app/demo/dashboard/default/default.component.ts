@@ -34,9 +34,9 @@ export class DefaultComponent implements OnInit {
 
   sortConfig: { column: string; direction: 'asc' | 'desc' | '' }[] = [];
   columns: string[] = [
-    'complaint_name', 'complaint_id', 'status', 'driver_name',
-    'type', 'complaint_register_time', 'driver_cnic',
-    'status_change_time', 'ev_id'
+    'title', 'complain_id', 'status', 'dr_id', 'driver_name',
+    'type', 'complain_timestamp',
+    'resolved_time'
   ];
 
   constructor(
@@ -79,7 +79,7 @@ export class DefaultComponent implements OnInit {
     this.loading = true;
     this.crmService.getComplaints().subscribe({
       next: (res: any) => {
-        this.complaints = Array.isArray(res.complaints) ? res.complaints : [];
+        this.complaints = Array.isArray(res) ? res : [];
         this.applySorting(); // Sort before calculating pagination
         this.loading = false;
       },
@@ -136,9 +136,8 @@ export class DefaultComponent implements OnInit {
         if (res && Object.keys(res).length > 0) {
           this.complainForm.patchValue({
             driverName: res.name || '',
-            phoneNo: res.contact_number || '',
-            evId: res.allocated_rikshaw || '',
-            // Ensure we extract the string from any Sanitizer object
+            phoneNo: res.contact_no || '',
+            evId: res.ev_id || '',
             driverImage: this.getRawImage(res.driver_image)
           });
           this.driverDetails = {
@@ -181,19 +180,15 @@ export class DefaultComponent implements OnInit {
       return;
     }
 
+    const cnicDigits = this.complainForm.value.cnic.replace(/-/g, '').substring(0, 13);
     const payload = {
-      // Clean 13 digits
-      driver_cnic: this.complainForm.value.cnic.replace(/-/g, '').substring(0, 13), 
-      driver_name: this.complainForm.value.driverName,
-      // Use both keys to ensure backend compatibility
-      driver_number: this.complainForm.value.phoneNo, 
-      phone_no: this.complainForm.value.phoneNo,
-      ev_id: this.complainForm.value.evId,
-      // Unwrap base64 string
-      driver_image: this.getRawImage(this.complainForm.value.driverImage), 
-      complaint_name: this.sanitizeInput(this.complainForm.value.title),
+      complain_id: 'CMP-' + Date.now(),
+      user_id: localStorage.getItem('user_id') || '',
+      dr_id: cnicDigits,
+      title: this.sanitizeInput(this.complainForm.value.title),
       description: this.sanitizeInput(this.complainForm.value.description),
-      type: this.complainForm.value.maintenanceType
+      type: this.complainForm.value.maintenanceType,
+      location: ''
     };
 
     this.crmService.postComplaint(payload).subscribe({
@@ -204,7 +199,7 @@ export class DefaultComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error submitting complaint:', err);
-        const errorMsg = err.error?.error || 'System internal error. Check Base64 image size.';
+        const errorMsg = err?.error?.detail || 'System internal error. Check Base64 image size.';
         alert(errorMsg);
       }
     });
@@ -221,12 +216,9 @@ export class DefaultComponent implements OnInit {
   }
 
   saveRow(order: any) {
-    // Ensure CNIC is cleaned for updates
-    if (order.driver_cnic) {
-      order.driver_cnic = order.driver_cnic.toString().replace(/\D/g, '').substring(0, 13);
-    }
+    const updateData = { status: order.status };
 
-    this.crmService.updateComplaint(order.complaint_id, order).subscribe({
+    this.crmService.updateComplaint(order.complain_id, updateData).subscribe({
       next: () => {
         alert('Complaint updated successfully!');
         this.editIndex = null;
@@ -260,15 +252,15 @@ export class DefaultComponent implements OnInit {
     this.complaints.sort((a: any, b: any) => {
       let valA = a[column],
         valB = b[column];
-      
+
       if (column.includes('time')) {
         valA = valA ? new Date(valA).getTime() : 0;
         valB = valB ? new Date(valB).getTime() : 0;
       }
-      
+
       if (typeof valA === 'string') valA = valA.toLowerCase();
       if (typeof valB === 'string') valB = valB.toLowerCase();
-      
+
       if (valA < valB) return direction === 'asc' ? -1 : 1;
       if (valA > valB) return direction === 'asc' ? 1 : -1;
       return 0;

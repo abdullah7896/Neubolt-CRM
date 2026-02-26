@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { Observable, map, shareReplay, tap } from 'rxjs';
+
 @Injectable({
   providedIn: 'root'
 })
 export class CrmService {
-  private baseAuthUrl = 'http://72.62.183.8:5000/neubolt/auth';
-  private baseUrl = 'http://72.62.183.8:5000/neubolt/crm';
-  private driverUrl = 'http://72.62.183.8:5000/neubolt';
+  private baseUrl = 'http://localhost:8000/neubolt';
+  private complaintsCache$?: Observable<any>;
+  private driversCache$?: Observable<any>;
 
   constructor(private http: HttpClient) { }
 
@@ -21,12 +21,15 @@ export class CrmService {
     });
   }
 
-  // ✅ Login API (store token)
+  // ✅ Login API (store tokens)
   login(credentials: { username: string; password: string }): Observable<any> {
-    return this.http.post(`${this.baseAuthUrl}/login`, credentials).pipe(
+    return this.http.post(`${this.baseUrl}/login`, credentials).pipe(
       tap((response: any) => {
         if (response && response.access_token) {
           localStorage.setItem('access_token', response.access_token);
+          localStorage.setItem('refresh_token', response.refresh_token || '');
+          localStorage.setItem('user_id', response.user_id || '');
+          localStorage.setItem('user_type', response.user_type || '');
         }
       })
     );
@@ -35,11 +38,15 @@ export class CrmService {
   // ✅ Logout
   logout(): void {
     localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('user_type');
+    this.clearAllCache();
   }
 
-  // ✅ Get Driver Details
+  // ✅ Get Driver Details by CNIC (dr_id)
   getDriverDetails(cnic: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/get-drivers_info/${cnic}`, {
+    return this.http.get(`${this.baseUrl}/drivers/${cnic}`, {
       headers: this.getAuthHeaders()
     });
   }
@@ -48,55 +55,89 @@ export class CrmService {
   postComplaint(complaint: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/complaints`, complaint, {
       headers: this.getAuthHeaders()
-    });
+    }).pipe(tap(() => this.invalidateComplaintsCache()));
   }
 
   // ✅ Get All Complaints
-  getComplaints(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/get-complaints`, {
-      headers: this.getAuthHeaders()
-    });
-  }
-
-  // ✅ Get Complaint by ID
-  getComplaintById(id: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/get-complaints_id/${id}`, {
-      headers: this.getAuthHeaders()
-    });
-  }
-
-  // ✅ Get Complaints by CNIC
-  getComplaintsByCnic(cnic: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/get-complaints_cnic/${cnic}`, {
-      headers: this.getAuthHeaders()
-    });
+  getComplaints(forceRefresh = false): Observable<any> {
+    if (forceRefresh || !this.complaintsCache$) {
+      this.complaintsCache$ = this.http.get(`${this.baseUrl}/complaints`, {
+        headers: this.getAuthHeaders()
+      }).pipe(shareReplay(1));
+    }
+    return this.complaintsCache$;
   }
 
   // ✅ Update Complaint
   updateComplaint(id: string, data: any): Observable<any> {
-    return this.http.put(`${this.baseUrl}/put-complaints/${id}`, data, {
+    return this.http.put(`${this.baseUrl}/complaints/${id}`, data, {
       headers: this.getAuthHeaders()
-    });
+    }).pipe(tap(() => this.invalidateComplaintsCache()));
   }
 
   // ✅ Delete Complaint
-  deleteComplaint(id: string, data: any): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/delete-complaints/${id}`, {
-      headers: this.getAuthHeaders(),
-      body: data
-    });
+  deleteComplaint(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/complaints/${id}`, {
+      headers: this.getAuthHeaders()
+    }).pipe(tap(() => this.invalidateComplaintsCache()));
   }
 
   // ✅ Driver APIs
   postDriver(driver: any): Observable<any> {
-    return this.http.post(`${this.driverUrl}/ev_drivers`, driver, {
+    return this.http.post(`${this.baseUrl}/drivers`, driver, {
       headers: this.getAuthHeaders()
-    });
+    }).pipe(tap(() => this.invalidateDriversCache()));
   }
 
-  getDrivers(): Observable<any> {
-    return this.http.get(`${this.driverUrl}/get-ev_drivers`, {
-      headers: this.getAuthHeaders()
-    });
+  getDrivers(forceRefresh = false): Observable<any> {
+    if (forceRefresh || !this.driversCache$) {
+      this.driversCache$ = this.http.get(`${this.baseUrl}/drivers`, {
+        headers: this.getAuthHeaders()
+      }).pipe(
+        map((res: any) => Array.isArray(res) ? res.map((driver: any) => this.normalizeDriver(driver)) : []),
+        shareReplay(1)
+      );
+    }
+    return this.driversCache$;
+  }
+
+  private normalizeDriver(driver: any): any {
+    const drId = driver?.dr_id ?? driver?.driver_id ?? driver?.cnic ?? '';
+    const name = driver?.name ?? driver?.driver_name ?? '';
+    const contact = driver?.contact_no ?? driver?.contactNumber ?? driver?.phone_no ?? '';
+    const evId = driver?.ev_id ?? driver?.allocated_rikshaw ?? driver?.allocatedRikshaw ?? driver?.vehicle_id ?? '';
+    const currentAddress = driver?.current_address ?? driver?.currentAddress ?? driver?.address ?? '';
+
+    return {
+      ...driver,
+      dr_id: drId,
+      driver_id: drId,
+      cnic: drId,
+      name,
+      driver_name: name,
+      contact_no: contact,
+      contactNumber: contact,
+      phone_no: contact,
+      ev_id: evId,
+      allocated_rikshaw: evId,
+      allocatedRikshaw: evId,
+      vehicle_id: evId,
+      current_address: currentAddress,
+      currentAddress,
+      address: currentAddress
+    };
+  }
+
+  private invalidateComplaintsCache(): void {
+    this.complaintsCache$ = undefined;
+  }
+
+  private invalidateDriversCache(): void {
+    this.driversCache$ = undefined;
+  }
+
+  private clearAllCache(): void {
+    this.invalidateComplaintsCache();
+    this.invalidateDriversCache();
   }
 }

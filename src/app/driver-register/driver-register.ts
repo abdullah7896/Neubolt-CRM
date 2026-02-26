@@ -37,11 +37,11 @@ export class DriverRegister implements OnInit {
   ) {
     this.driverForm = this.fb.group({
       name: ['', [Validators.required, Validators.pattern(/^[a-zA-Z\s]+$/)]],
-      contact_number: ['', [Validators.required, Validators.pattern(/^[0-9]{11}$/)]],
+      contact_no: ['', [Validators.required, Validators.pattern(/^[0-9]{11}$/)]],
       dob: ['', Validators.required],
       current_address: ['', [Validators.required, Validators.minLength(5)]],
-      allocated_rikshaw: ['', Validators.required],
-      cnic_number: ['', [Validators.required, Validators.pattern(/^[0-9]{13}$/)]]
+      ev_id: ['', Validators.required],
+      dr_id: ['', [Validators.required, Validators.pattern(/^[0-9]{13}$/)]]
     });
   }
 
@@ -52,7 +52,16 @@ export class DriverRegister implements OnInit {
   loadDrivers() {
     this.crm.getDrivers().subscribe({
       next: (res: any) => {
-        this.evData = res;
+        this.evData = Array.isArray(res)
+          ? res.map((driver: any) => ({
+              ...driver,
+              dr_id: driver?.dr_id ?? driver?.driver_id ?? driver?.cnic ?? '',
+              name: driver?.name ?? driver?.driver_name ?? '',
+              contact_no: driver?.contact_no ?? driver?.contactNumber ?? driver?.phone_no ?? '',
+              ev_id: driver?.ev_id ?? driver?.allocated_rikshaw ?? driver?.vehicle_id ?? '',
+              current_address: driver?.current_address ?? driver?.address ?? ''
+            }))
+          : [];
         this.applySearch();
       },
       error: (err) => console.error('❌ Error fetching drivers', err)
@@ -71,8 +80,8 @@ export class DriverRegister implements OnInit {
     const query = this.sanitizeInput(this.searchQuery.trim().toLowerCase());
     if (query) {
       this.filteredData = this.evData.filter(ev =>
-        (ev.allocated_rikshaw && ev.allocated_rikshaw.toString().toLowerCase().includes(query)) ||
-        (ev.driver_id && ev.driver_id.toString().toLowerCase().includes(query))
+        (ev.ev_id && ev.ev_id.toString().toLowerCase().includes(query)) ||
+        (ev.dr_id && ev.dr_id.toString().toLowerCase().includes(query))
       );
     } else {
       this.filteredData = [...this.evData];
@@ -94,16 +103,22 @@ export class DriverRegister implements OnInit {
       return;
     }
 
-    const sanitizedData: any = {};
-    Object.keys(this.driverForm.value).forEach(key => {
-      sanitizedData[key] = this.sanitizeInput(this.driverForm.value[key]);
-    });
+    const formValues = this.driverForm.value;
 
     const driverData = {
-      ...sanitizedData,
-      ...this.uploadedFiles,
-      driver_number: sanitizedData.contact_number, // Map to expected backend key
-      ev_id: sanitizedData.allocated_rikshaw         // Map to expected backend key
+      dr_id: this.sanitizeInput(formValues.dr_id),
+      name: this.sanitizeInput(formValues.name),
+      contact_no: this.sanitizeInput(formValues.contact_no),
+      dob: formValues.dob,
+      city: '',
+      current_address: this.sanitizeInput(formValues.current_address),
+      ev_id: this.sanitizeInput(formValues.ev_id),
+      user_id: localStorage.getItem('user_id') || '',
+      driver_image: this.uploadedFiles['driver_image'] || null,
+      cnic_front: this.uploadedFiles['cnic_front'] || null,
+      cnic_back: this.uploadedFiles['cnic_back'] || null,
+      linsence_img: this.uploadedFiles['linsence_img'] || null,
+      criminal_record_img: this.uploadedFiles['criminal_record_img'] || null
     };
     console.log('📤 Submitting Driver Data:', driverData);
 
@@ -117,7 +132,8 @@ export class DriverRegister implements OnInit {
       },
       error: (err) => {
         console.error('❌ Error registering driver', err);
-        alert('Failed to register driver!');
+        const errorMsg = err?.error?.detail || 'Failed to register driver!';
+        alert(errorMsg);
       }
     });
   }
@@ -143,9 +159,7 @@ export class DriverRegister implements OnInit {
 
       const reader = new FileReader();
       reader.onload = () => {
-        const result = reader.result as string;
-        // Strip data:image/jpeg;base64, header to send raw base64
-        this.uploadedFiles[field] = result.split(',')[1] || result;
+        this.uploadedFiles[field] = reader.result as string;
       };
       reader.readAsDataURL(file);
     }
